@@ -1,16 +1,16 @@
-# 🎛️ MusicX Studio — Web FL Studio Channel Rack
+# 🎛️ MusicX Studio — Web FL Studio DAW
 
-> Protótipo de uma estação de trabalho de áudio digital (DAW) focada no clássico **Channel Rack** do FL Studio, construída 100% com tecnologias web nativas (**HTML5, CSS3 e Web Audio API**) sem nenhuma dependência externa ou arquivos de áudio pré-gravados.
+> Estação de trabalho de áudio digital (DAW) inspirada no clássico fluxo de trabalho do **FL Studio**, construída 100% com tecnologias web nativas (**HTML5, CSS3 e Web Audio API**) sem nenhuma dependência externa pesada ou bibliotecas de terceiros.
 
 ---
 
 ## 🌟 Visão Geral
 
-O **MusicX Studio** recria no navegador a experiência icônica do sequenciador de passos (Step Sequencer) do FL Studio. Todos os instrumentos (Kick, Snare, Hi-Hat, Clap e Bass 303) são **sintetizados em tempo real** através de osciladores, filtros biquad e geradores de ruído da própria **Web Audio API**.
+O **MusicX Studio** recria no navegador o ecossistema de produção musical do FL Studio. Todos os instrumentos (Kick, Snare, Hi-Hat, Clap e Bass 303) são **sintetizados em tempo real** através de osciladores, filtros biquad e geradores de ruído da própria **Web Audio API**.
 
 ---
 
-## ✨ Principais Funcionalidades
+## ✨ Funcionalidades Atuais
 
 - **🎹 Sequenciador de 16 Passos (4/4)**:
   - Divisão visual clássica de 4 em 4 passos (blocos alternados em carvão e laranja característicos).
@@ -18,18 +18,31 @@ O **MusicX Studio** recria no navegador a experiência icônica do sequenciador 
   - Indicador visual luminoso e sincronizado com o passo atual em reprodução (*playhead*).
 
 - **🔊 Síntese Sonora em Tempo Real (Zero Samples / Zero Downloads)**:
-  - Nenhum arquivo `.wav` ou `.mp3` é baixado. Todo o áudio é sintetizado matematicamente no processador do navegador.
+  - Nenhum arquivo `.wav` ou `.mp3` externo obrigatório. Todo o áudio é sintetizado matematicamente no processador do navegador.
   - Carregamento instantâneo e funcionamento 100% offline.
 
 - **🎚️ Controles por Canal**:
   - **Mute LED**: Ative ou silencie qualquer canal individualmente com um clique no LED verde.
   - **Knob de Volume (V)**: Controle de ganho dedicado para cada instrumento (0 a 100%).
-  - **Pré-visualização do Nome**: Estilo industrial e display dos canais.
+  - **Identificação Visual**: Estilo industrial com nomes dos canais em botões compactos.
 
 - **⏱️ Motor de Tempo e Transporte de Alta Precisão**:
-  - **BPM Ajustável**: Fader de andamento com controle em tempo real de 60 a 180 BPM.
+  - **BPM Ajustável & Digitável**: Controle bidirecional via slider e display digital LCD interativo (40 a 240 BPM).
   - **Displays LCD Retrô**: Leituras digitais verdes para o andamento (BPM) e para o passo atual (`STEP 01` a `16`).
   - **Algoritmo Lookahead Scheduler**: Implementação do padrão de temporização precisa de áudio web (*A Tale of Two Clocks*), garantindo que a reprodução não sofra engasgos (*jitter*) causados pela renderização da interface.
+
+---
+
+## 🎚️ Pilares de Inspiração do FL Studio
+
+O projeto segue a filosofia dos pilares fundamentais do FL Studio:
+
+1. **Channel Rack com Sequenciador de Passos**: Criação rápida de padrões rítmicos com controle de velocidade, panorâmica e swing.
+2. **Mixer com Rack de Efeitos**: Roteamento independente de cada canal para pistas com faders, medidores de volume (VU meters) e cadeias de efeitos (Delay, Reverb, Distorção, EQ).
+3. **Piano Roll Melódico**: Composição melódica com grid de notas, escalas musicais, acordes pré-configurados e suporte a glides.
+4. **Playlist / Arranjador**: Linha do tempo multi-pista para posicionar e encadear diferentes *patterns* montando a música inteira.
+5. **Browser Lateral de Samples**: Navegador em árvore com suporte a *drag-and-drop* de arquivos `.wav` do usuário.
+6. **Exportação de Áudio**: Renderização ultrarrápida do arranjo para `.wav` através da `OfflineAudioContext`.
 
 ---
 
@@ -44,6 +57,43 @@ Cada canal possui seu próprio circuito virtual construído com nós de áudio n
 | **Hat Closed** | Chimbal Fechado | Ruído Branco + Highpass Filter Extremo | Buffer de ruído filtrado em 7000 Hz com decaimento ultracurto de 50ms. |
 | **Clap 90s** | Palma Vintage | Ruído Branco + Bandpass Filter | Filtro passa-faixa centrado em 1200 Hz ($Q=2$) com envelope de 220ms. |
 | **303 Bass** | Baixo Ácido | Oscilador Dente de Serra (Sawtooth) + Lowpass Sweep | Inspirado no lendário Roland TB-303 (Nota C2 / 65.41 Hz) com varredura dinâmica de corte de filtro (600 Hz $\to$ 120 Hz). |
+
+---
+
+## 🗺️ Roadmap de Desenvolvimento
+
+```mermaid
+graph LR
+    F1["Fase 1: Channel Rack & Tempo<br/>(Concluída ✅)"] --> F2["Fase 2: Mixer & Rack de FX<br/>(Em Andamento 🚀)"]
+    F2 --> F3["Fase 3: Piano Roll & Samples<br/>(Planejado ⏳)"]
+    F3 --> F4["Fase 4: Playlist & Exportação<br/>(Planejado ⏳)"]
+```
+
+### ✅ Fase 1: Channel Rack e Motor de Áudio (Concluída)
+- [x] Sequenciador de 16 passos com divisão em blocos FL Studio (4/4).
+- [x] Síntese pura via Web Audio API para bateria e baixo 303.
+- [x] Transporte (Play / Stop) com relógio de áudio sem latência.
+- [x] Controle de BPM com display LCD interativo digitável e sincronizado ao slider.
+- [x] Configuração para GitHub Codespaces (`.devcontainer`).
+
+### 🚀 Fase 2: Mixer e Rack de Efeitos (Foco Atual)
+- [ ] **Interface do Mixer**: Pistas de canais (Master + 5 canais dedicados) com faders verticais.
+- [ ] **Medidores de Pico (VU Meters Animados)**: Canvas com barra luminosa em tempo real via `AnalyserNode`.
+- [ ] **Rack de Efeitos (Master / Pistas)**:
+  - **Fruity Delay**: Eco estéreo com feedback e tempo sincronizado ao andamento.
+  - **Fruity Reeverb**: Convolução / algoritmo de ambiência e espaço.
+  - **Overdrive / Distorção**: Aquecimento e saturação de harmônicos via `WaveShaperNode`.
+  - **Filtro Master (Cutoff & Resonance)**: Filtro passa-baixa e passa-alta dinâmico.
+- [ ] **Roteamento de Canais**: Cada som do Channel Rack ligado à sua respectiva pista no Mixer.
+
+### ⏳ Fase 3: Piano Roll Melódico e Carregador de Samples
+- [ ] Visualizador de Piano Roll para o sintetizador 303.
+- [ ] Drag-and-drop de arquivos `.wav` do computador para os pads.
+- [ ] Sistema de Swing/Groove global e controle de Velocity por passo.
+
+### ⏳ Fase 4: Playlist / Arranjador e Exportação
+- [ ] Timeline horizontal multi-pistas com múltiplos Patterns.
+- [ ] Exportação do áudio final em `.wav` de alta qualidade via `OfflineAudioContext`.
 
 ---
 
@@ -88,18 +138,7 @@ Este repositório já conta com **Dev Containers** configurados:
 - **HTML5**: Estrutura semântica e acessível.
 - **CSS3 Moderno**: Variáveis CSS (Custom Properties), Flexbox, gradientes, sombras internas simulando hardware analógico (*skeuomorphism*) e micro-animações.
 - **JavaScript (ES6+)**: Lógica reativa do sequenciador e gerenciamento de estado.
-- **Web Audio API**: `AudioContext`, `OscillatorNode`, `AudioBufferSourceNode`, `BiquadFilterNode`, `GainNode` e `StereoPannerNode`.
-
----
-
-## 🗺️ Roadmap de Evoluções Futuras
-
-- [ ] **Piano Roll**: Edição melódica com notas em diferentes alturas para o sintetizador 303.
-- [ ] **Carregador de Samples**: Suporte a *drag-and-drop* de arquivos `.wav`/`.mp3` locais do usuário.
-- [ ] **Mixer de Efeitos**: Rack de masterização com Reverb, Delay e Distorção/Overdrive.
-- [ ] **Suporte a Múltiplos Patterns**: Criação e encadeamento de padrões para composição de músicas completas.
-- [ ] **Suporte a MIDI**: Conexão com teclados e controladores MIDI físicos via Web MIDI API.
-- [ ] **Exportação de Áudio**: Exportação do beat em arquivo `.wav` via `OfflineAudioContext`.
+- **Web Audio API**: `AudioContext`, `OscillatorNode`, `AudioBufferSourceNode`, `BiquadFilterNode`, `GainNode`, `DelayNode`, `ConvolverNode`, `WaveShaperNode`, `AnalyserNode` e `StereoPannerNode`.
 
 ---
 

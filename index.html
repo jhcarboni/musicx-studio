@@ -241,11 +241,11 @@
   <button id="btnPlay" class="transport-btn play">▶ PLAY</button>
   <button id="btnStop" class="transport-btn">■ STOP</button>
   
-  <div class="lcd-display">
+  <div class="lcd-display" title="Clique para digitar o BPM">
     <span class="lcd-label">BPM</span>
-    <span id="bpmDisplay">130</span>
+    <input type="number" id="bpmInput" class="lcd-input" min="40" max="240" value="130">
   </div>
-  <input type="range" id="bpmSlider" min="60" max="180" value="130" style="width: 100px;">
+  <input type="range" id="bpmSlider" min="40" max="240" value="130" style="width: 100px;">
 
   <div class="lcd-display">
     <span class="lcd-label">STEP</span>
@@ -556,10 +556,41 @@ document.getElementById('btnPlay').onclick = play;
 document.getElementById('btnStop').onclick = stop;
 
 const bpmSlider = document.getElementById('bpmSlider');
-const bpmDisplay = document.getElementById('bpmDisplay');
+const bpmInput = document.getElementById('bpmInput');
+
+function updateBpm(newBpm, syncInput = true, syncSlider = true) {
+  bpm = Math.min(240, Math.max(40, newBpm));
+  if (syncInput) bpmInput.value = bpm;
+  if (syncSlider) bpmSlider.value = bpm;
+}
+
 bpmSlider.oninput = (e) => {
-  bpm = parseInt(e.target.value, 10);
-  bpmDisplay.textContent = bpm;
+  updateBpm(parseInt(e.target.value, 10), true, false);
+};
+
+bpmInput.onfocus = () => {
+  bpmInput.select();
+};
+
+bpmInput.oninput = (e) => {
+  const val = parseInt(e.target.value, 10);
+  if (!isNaN(val)) {
+    bpm = Math.min(240, Math.max(40, val));
+    bpmSlider.value = bpm;
+  }
+};
+
+bpmInput.onblur = () => {
+  let val = parseInt(bpmInput.value, 10);
+  if (isNaN(val) || val < 40) val = 40;
+  if (val > 240) val = 240;
+  updateBpm(val, true, true);
+};
+
+bpmInput.onkeydown = (e) => {
+  if (e.key === 'Enter') {
+    bpmInput.blur();
+  }
 };
 
 renderRack();

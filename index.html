@@ -4,606 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MusicX Studio — Web FL Studio DAW</title>
-<style>
-  :root {
-    --bg-app: #121316;
-    --bg-main: #1e2124;
-    --bg-darker: #16181b;
-    --panel-header: #282c31;
-    --panel-border: #2e333a;
-    --border-dark: #101214;
-    --border-light: #383e46;
-    --btn-off: #32373e;
-    --btn-orange: #c86328;
-    --btn-orange-active: #ff8533;
-    --btn-charcoal: #3e444c;
-    --btn-charcoal-active: #6e7987;
-    --text-bright: #e6edf3;
-    --text-muted: #8b949e;
-    --lcd-bg: #0d1117;
-    --lcd-green: #39d353;
-    --fl-accent: #ff8533;
-    --cyan: #00f0ff;
-    --vu-green: #39d353;
-    --vu-amber: #ffaa00;
-    --vu-red: #ff3344;
-  }
-
-  * { box-sizing: border-box; user-select: none; }
-  body {
-    margin: 0;
-    padding: 16px;
-    background: var(--bg-app);
-    color: var(--text-bright);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    font-size: 13px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  /* TOOLBAR */
-  .fl-toolbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: var(--panel-header);
-    border: 1px solid var(--border-light);
-    border-bottom: 2px solid var(--border-dark);
-    padding: 8px 14px;
-    border-radius: 4px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-
-  .toolbar-left, .toolbar-right {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .app-logo {
-    font-weight: 800;
-    font-size: 14px;
-    letter-spacing: 1px;
-    color: #ff8533;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-right: 6px;
-  }
-
-  .transport-btn {
-    background: linear-gradient(to bottom, #40464f, #2a2e35);
-    border: 1px solid var(--border-dark);
-    color: var(--text-bright);
-    padding: 6px 14px;
-    border-radius: 3px;
-    cursor: pointer;
-    font-weight: bold;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.15);
-    font-size: 12px;
-    transition: all 0.1s ease;
-  }
-  .transport-btn:active, .transport-btn.active {
-    background: #1a1c20;
-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.6);
-    border-color: #000;
-  }
-  .transport-btn.play.active {
-    color: var(--lcd-green);
-    border-color: var(--lcd-green);
-    box-shadow: 0 0 8px rgba(57, 211, 83, 0.4);
-  }
-
-  .lcd-display {
-    background: var(--lcd-bg);
-    border: 1px solid #202428;
-    border-radius: 3px;
-    padding: 4px 10px;
-    color: var(--lcd-green);
-    font-family: "Courier New", Courier, monospace;
-    font-size: 15px;
-    font-weight: bold;
-    letter-spacing: 1px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.8);
-  }
-  .lcd-label { color: #555; font-size: 10px; text-transform: uppercase; }
-
-  .lcd-input {
-    background: transparent;
-    border: none;
-    outline: none;
-    color: var(--lcd-green);
-    font-family: "Courier New", Courier, monospace;
-    font-size: 15px;
-    font-weight: bold;
-    letter-spacing: 1px;
-    width: 44px;
-    padding: 0;
-    margin: 0;
-    cursor: text;
-    -moz-appearance: textfield;
-  }
-  .lcd-input::-webkit-outer-spin-button,
-  .lcd-input::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-  }
-  .lcd-input:focus {
-    background: rgba(57, 211, 83, 0.1);
-    box-shadow: 0 0 4px rgba(57, 211, 83, 0.3);
-    border-radius: 2px;
-  }
-
-  .view-toggles {
-    display: flex;
-    background: #191c20;
-    padding: 2px;
-    border-radius: 3px;
-    border: 1px solid var(--border-dark);
-  }
-  .view-btn {
-    background: transparent;
-    border: none;
-    color: var(--text-muted);
-    font-size: 11px;
-    font-weight: 600;
-    padding: 5px 10px;
-    border-radius: 2px;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-  .view-btn.active {
-    background: #2f343b;
-    color: var(--text-bright);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.1);
-  }
-
-  /* CHANNEL RACK */
-  .channel-rack {
-    background: var(--bg-main);
-    border: 1px solid var(--border-dark);
-    box-shadow: 0 6px 16px rgba(0,0,0,0.5);
-    border-radius: 4px;
-    padding: 12px;
-  }
-
-  .rack-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 10px;
-    padding-bottom: 6px;
-    border-bottom: 1px solid #2a2f35;
-  }
-  .rack-title {
-    font-weight: bold;
-    color: #a0aab5;
-    font-size: 12px;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .channel-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 6px;
-    background: var(--bg-darker);
-    padding: 4px 6px;
-    border-radius: 3px;
-    border: 1px solid #22262b;
-  }
-
-  .chan-meta {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    width: 250px;
-  }
-  .chan-track-idx {
-    font-size: 10px;
-    font-weight: bold;
-    color: #ff8533;
-    background: #111;
-    padding: 2px 5px;
-    border-radius: 2px;
-    border: 1px solid #222;
-    min-width: 18px;
-    text-align: center;
-  }
-  .chan-mute {
-    width: 14px;
-    height: 14px;
-    border-radius: 50%;
-    background: #39d353;
-    border: 1px solid #1a1c20;
-    cursor: pointer;
-    box-shadow: 0 0 5px rgba(57, 211, 83, 0.6);
-  }
-  .chan-mute.muted {
-    background: #33383e;
-    box-shadow: none;
-  }
-
-  .chan-name-btn {
-    background: #2d333b;
-    border: 1px solid #414852;
-    color: #c9d1d9;
-    padding: 6px 10px;
-    border-radius: 3px;
-    font-size: 11px;
-    font-weight: 600;
-    width: 100px;
-    text-align: left;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    cursor: pointer;
-  }
-  .chan-name-btn:hover { background: #383f49; }
-  .chan-name-btn:active { background: #1c1f24; color: #fff; }
-
-  .knob-group {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-  }
-  .knob-label { font-size: 9px; color: #777; width: 14px; text-align: center; }
-  .slider-knob {
-    -webkit-appearance: none;
-    width: 38px;
-    height: 4px;
-    background: #111;
-    border-radius: 2px;
-    outline: none;
-  }
-  .slider-knob::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: #8b949e;
-    cursor: pointer;
-  }
-
-  .steps-container {
-    display: flex;
-    gap: 3px;
-    flex: 1;
-  }
-  .step-pad {
-    flex: 1;
-    height: 28px;
-    border-radius: 2px;
-    cursor: pointer;
-    border: 1px solid rgba(0,0,0,0.5);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.1), 0 1px 2px rgba(0,0,0,0.4);
-    position: relative;
-    transition: transform 0.05s ease;
-  }
-  .step-pad:active { transform: scale(0.96); }
-
-  .group-a { background: var(--btn-charcoal); }
-  .group-b { background: var(--btn-orange); }
-
-  .step-pad.active.group-a {
-    background: var(--btn-charcoal-active);
-    box-shadow: 0 0 6px rgba(255,255,255,0.6), inset 0 0 4px #fff;
-  }
-  .step-pad.active.group-b {
-    background: var(--btn-orange-active);
-    box-shadow: 0 0 8px rgba(255,133,51,0.8), inset 0 0 4px #ffe6d4;
-  }
-
-  .step-pad.current-step::after {
-    content: "";
-    position: absolute;
-    top: -3px;
-    left: 2px;
-    right: 2px;
-    height: 2px;
-    background: #00f0ff;
-    border-radius: 1px;
-    box-shadow: 0 0 6px #00f0ff;
-  }
-
-  /* MIXER PANEL */
-  .mixer-panel {
-    background: #17191d;
-    border: 1px solid var(--border-dark);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.6);
-    border-radius: 4px;
-    padding: 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .mixer-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding-bottom: 8px;
-    border-bottom: 1px solid #282c32;
-  }
-  .mixer-title {
-    font-weight: bold;
-    color: #a0aab5;
-    font-size: 12px;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .mixer-body {
-    display: flex;
-    gap: 14px;
-    align-items: stretch;
-    flex-wrap: wrap;
-  }
-
-  /* MIXER TRACKS STRIPS */
-  .mixer-strips-container {
-    display: flex;
-    gap: 6px;
-    background: #111316;
-    padding: 8px;
-    border-radius: 4px;
-    border: 1px solid #20242a;
-    overflow-x: auto;
-  }
-
-  .mixer-strip {
-    width: 68px;
-    background: linear-gradient(to bottom, #23272d, #1a1c20);
-    border: 1px solid #31363f;
-    border-radius: 3px;
-    padding: 6px 4px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-    position: relative;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
-  }
-  .mixer-strip.master {
-    border-color: #c86328;
-    background: linear-gradient(to bottom, #2a2520, #1b1714);
-  }
-
-  .strip-header {
-    width: 100%;
-    text-align: center;
-    border-bottom: 1px solid #2e333b;
-    padding-bottom: 4px;
-  }
-  .strip-num {
-    font-size: 9px;
-    color: #8b949e;
-    font-weight: bold;
-    display: block;
-  }
-  .strip-name {
-    font-size: 10px;
-    font-weight: bold;
-    color: var(--text-bright);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    display: block;
-  }
-
-  .strip-pan-group {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2px;
-    width: 100%;
-  }
-  .strip-pan-label { font-size: 8px; color: #777; }
-  .strip-pan-slider {
-    -webkit-appearance: none;
-    width: 48px;
-    height: 3px;
-    background: #0d0f12;
-    border-radius: 2px;
-    outline: none;
-  }
-  .strip-pan-slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: #8b949e;
-    cursor: pointer;
-  }
-
-  /* FADER + VU METER */
-  .strip-fader-area {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    height: 130px;
-    padding: 4px 0;
-  }
-
-  .fader-vertical-wrap {
-    height: 120px;
-    width: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-  }
-
-  .fader-slider {
-    -webkit-appearance: none;
-    width: 120px;
-    height: 6px;
-    background: #090a0d;
-    border-radius: 3px;
-    outline: none;
-    transform: rotate(-90deg);
-    cursor: pointer;
-    box-shadow: inset 0 1px 2px rgba(0,0,0,0.8);
-  }
-  .fader-slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 16px;
-    height: 16px;
-    border-radius: 2px;
-    background: linear-gradient(to bottom, #d0d7de, #8c959f);
-    border: 1px solid #484f58;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.6), inset 0 1px 0 #fff;
-    cursor: pointer;
-  }
-
-  .vu-meter-canvas {
-    background: #0b0c0e;
-    border: 1px solid #1a1c20;
-    border-radius: 2px;
-    box-shadow: inset 0 1px 3px rgba(0,0,0,0.9);
-  }
-
-  .strip-db-readout {
-    font-size: 9px;
-    font-family: "Courier New", Courier, monospace;
-    color: var(--lcd-green);
-    background: #0a0b0d;
-    padding: 1px 4px;
-    border-radius: 2px;
-    width: 52px;
-    text-align: center;
-  }
-
-  .strip-mute-btn {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background: var(--lcd-green);
-    border: 1px solid #111;
-    cursor: pointer;
-    box-shadow: 0 0 4px rgba(57,211,83,0.5);
-  }
-  .strip-mute-btn.muted {
-    background: #444;
-    box-shadow: none;
-  }
-
-  /* MASTER FX RACK */
-  .mixer-fx-rack {
-    flex: 1;
-    min-width: 290px;
-    background: #111316;
-    border: 1px solid #20242a;
-    border-radius: 4px;
-    padding: 8px 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .fx-rack-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    font-size: 11px;
-    font-weight: bold;
-    color: #ff8533;
-    border-bottom: 1px solid #22262d;
-    padding-bottom: 4px;
-    text-transform: uppercase;
-  }
-
-  .fx-slot {
-    background: #1a1d22;
-    border: 1px solid #292e36;
-    border-radius: 3px;
-    padding: 8px 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    transition: border-color 0.15s;
-  }
-  .fx-slot.active-fx {
-    border-color: #ff8533;
-    box-shadow: inset 0 0 6px rgba(255,133,51,0.1);
-  }
-
-  .fx-slot-titlebar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-  .fx-slot-name {
-    font-size: 11px;
-    font-weight: 700;
-    color: #d0d7de;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .fx-toggle {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: #444;
-    cursor: pointer;
-    border: 1px solid #111;
-  }
-  .fx-toggle.on {
-    background: #ff8533;
-    box-shadow: 0 0 6px rgba(255,133,51,0.8);
-  }
-
-  .fx-controls-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-  }
-
-  .fx-param {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 10px;
-    color: #8b949e;
-  }
-  .fx-param-slider {
-    -webkit-appearance: none;
-    width: 60px;
-    height: 3px;
-    background: #0c0d10;
-    border-radius: 2px;
-    outline: none;
-  }
-  .fx-param-slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: #ff8533;
-    cursor: pointer;
-  }
-  .fx-val { font-size: 9px; color: #ccc; font-family: monospace; width: 32px; }
-</style>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 
@@ -631,6 +32,7 @@
   <div class="toolbar-right">
     <div class="view-toggles">
       <button id="toggleRackBtn" class="view-btn active">🎹 Rack</button>
+      <button id="togglePrBtn" class="view-btn active">🎹 Piano Roll</button>
       <button id="toggleMixerBtn" class="view-btn active">🎛️ Mixer & FX</button>
     </div>
   </div>
@@ -643,6 +45,50 @@
     <span style="color: #666; font-size: 11px;">16 Steps (4/4) &bull; Zero Samples / Realtime Synthesis</span>
   </div>
   <div id="channelsContainer"></div>
+</div>
+
+<!-- PIANO ROLL WINDOW -->
+<div id="pianoRollWindow" class="piano-roll-panel">
+  <div class="pr-header">
+    <div class="pr-title-group">
+      <span class="pr-title">🎹 FL Piano Roll</span>
+      <div class="pr-target-select-wrap">
+        <span class="pr-target-label">Target:</span>
+        <select id="prTargetSelect" class="pr-select">
+          <option value="bass" selected>303 Bass</option>
+          <option value="kick">Kick 808</option>
+          <option value="snare">Snare Hard</option>
+          <option value="hat">Hat Closed</option>
+          <option value="clap">Clap 90s</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="pr-tools">
+      <button id="prOctaveDownBtn" class="pr-tool-btn" title="Descer 1 oitava">- Octave</button>
+      <button id="prOctaveUpBtn" class="pr-tool-btn" title="Subir 1 oitava">+ Octave</button>
+      <button id="prPresetAcidBtn" class="pr-tool-btn" title="Carregar linha de baixo Acid">⚡ Acid Riff</button>
+      <button id="prClearBtn" class="pr-tool-btn danger" title="Limpar notas">Clear</button>
+      <button id="prCloseBtn" class="pr-tool-btn" title="Fechar Piano Roll">&times;</button>
+    </div>
+  </div>
+
+  <div class="pr-timeline-ruler">
+    <div class="pr-ruler-corner">KEY</div>
+    <div class="pr-ruler-steps" id="prRulerSteps"></div>
+  </div>
+
+  <div class="pr-workspace-scroll" id="prWorkspaceScroll">
+    <div class="pr-keyboard" id="prKeyboard"></div>
+    <div class="pr-grid-container" id="prGridContainer">
+      <div id="prPlayhead" class="pr-playhead"></div>
+    </div>
+  </div>
+
+  <div class="pr-footer">
+    <span id="prNoteInfo">Clique em uma célula para adicionar ou remover notas. Clique nas teclas de piano à esquerda para pré-escutar o tom.</span>
+    <span class="pr-scale-info">Range: C2 a C4 (24 Semitons) &bull; 16 Steps</span>
+  </div>
 </div>
 
 <!-- MIXER & FX PANEL -->
@@ -761,17 +207,69 @@
 
 <script>
 // ==========================================
+// PIANO ROLL NOTE DEFINITIONS & CONFIGURATION
+// ==========================================
+// 25 notes from C4 (48) down to C2 (36)
+const PR_NOTE_MAP = [
+  { midi: 48, name: 'C4', isBlack: false },
+  { midi: 47, name: 'B3', isBlack: false },
+  { midi: 46, name: 'A#3', isBlack: true },
+  { midi: 45, name: 'A3', isBlack: false },
+  { midi: 44, name: 'G#3', isBlack: true },
+  { midi: 43, name: 'G3', isBlack: false },
+  { midi: 42, name: 'F#3', isBlack: true },
+  { midi: 41, name: 'F3', isBlack: false },
+  { midi: 40, name: 'E3', isBlack: false },
+  { midi: 39, name: 'D#3', isBlack: true },
+  { midi: 38, name: 'D3', isBlack: false },
+  { midi: 37, name: 'C#3', isBlack: true },
+  { midi: 36, name: 'C3', isBlack: false },
+  { midi: 35, name: 'B2', isBlack: false },
+  { midi: 34, name: 'A#2', isBlack: true },
+  { midi: 33, name: 'A2', isBlack: false },
+  { midi: 32, name: 'G#2', isBlack: true },
+  { midi: 31, name: 'G2', isBlack: false },
+  { midi: 30, name: 'F#2', isBlack: true },
+  { midi: 29, name: 'F2', isBlack: false },
+  { midi: 28, name: 'E2', isBlack: false },
+  { midi: 27, name: 'D#2', isBlack: true },
+  { midi: 26, name: 'D2', isBlack: false },
+  { midi: 25, name: 'C#2', isBlack: true },
+  { midi: 24, name: 'C2', isBlack: false }
+];
+
+function midiToFreq(midi) {
+  return 440 * Math.pow(2, (midi - 69) / 12);
+}
+
+// ==========================================
 // AUDIO CORE & MIXER DSP ARCHITECTURE
 // ==========================================
 let audioCtx = null;
 
 // Channel Rack Instrument Definitions
 const channels = [
-  { id: 'kick', name: 'Kick 808', vol: 0.9, pan: 0, muted: false, trackIdx: 1, pattern: [1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0] },
-  { id: 'snare', name: 'Snare Hard', vol: 0.75, pan: 0, muted: false, trackIdx: 2, pattern: [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0] },
-  { id: 'hat', name: 'Hat Closed', vol: 0.6, pan: 0.1, muted: false, trackIdx: 3, pattern: [1,0,1,0, 1,0,1,0, 1,0,1,0, 1,0,1,0] },
-  { id: 'clap', name: 'Clap 90s', vol: 0.7, pan: -0.1, muted: false, trackIdx: 4, pattern: [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0] },
-  { id: 'bass', name: '303 Bass', vol: 0.8, pan: 0, muted: false, trackIdx: 5, pattern: [1,0,0,1, 0,0,1,0, 0,1,0,0, 1,0,1,0] }
+  { id: 'kick', name: 'Kick 808', vol: 0.9, pan: 0, muted: false, trackIdx: 1, notes: [], pattern: [1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0] },
+  { id: 'snare', name: 'Snare Hard', vol: 0.75, pan: 0, muted: false, trackIdx: 2, notes: [], pattern: [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0] },
+  { id: 'hat', name: 'Hat Closed', vol: 0.6, pan: 0.1, muted: false, trackIdx: 3, notes: [], pattern: [1,0,1,0, 1,0,1,0, 1,0,1,0, 1,0,1,0] },
+  { id: 'clap', name: 'Clap 90s', vol: 0.7, pan: -0.1, muted: false, trackIdx: 4, notes: [], pattern: [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0] },
+  { 
+    id: 'bass', 
+    name: '303 Bass', 
+    vol: 0.85, 
+    pan: 0, 
+    muted: false, 
+    trackIdx: 5, 
+    notes: [
+      { step: 0, midi: 24 }, // C2
+      { step: 3, midi: 27 }, // D#2
+      { step: 6, midi: 31 }, // G2
+      { step: 9, midi: 34 }, // A#2
+      { step: 12, midi: 36 }, // C3
+      { step: 14, midi: 31 }  // G2
+    ], 
+    pattern: [1,0,0,1, 0,0,1,0, 0,1,0,0, 1,0,1,0] 
+  }
 ];
 
 // Mixer Tracks Configuration (0 = Master, 1-5 = Channels)
@@ -792,7 +290,6 @@ const fxState = {
   filter: { on: false, type: 'lowpass', cutoff: 3500, q: 2.5 }
 };
 
-// DSP Node Containers
 let masterBus = null;
 const trackNodes = new Map();
 
@@ -836,7 +333,6 @@ function makeDistortionCurve(amount = 25) {
 }
 
 function buildMixerDSP() {
-  // Master Bus Construction
   const masterInput = audioCtx.createGain();
   const masterDryGain = audioCtx.createGain();
   const masterFaderGain = audioCtx.createGain();
@@ -890,7 +386,6 @@ function buildMixerDSP() {
   // Routing Master Input -> Filter -> Master FX Matrix
   masterInput.connect(filterNode);
   
-  // Dry and FX branches from Filter
   filterNode.connect(masterDryGain);
   filterNode.connect(distNode);
   distNode.connect(distWetGain);
@@ -942,7 +437,6 @@ function buildMixerDSP() {
     trackAnalyser.fftSize = 128;
 
     trackFader.gain.setValueAtTime(tr.vol, audioCtx.currentTime);
-
     trackInput.connect(trackFader);
     trackFader.connect(trackAnalyser);
 
@@ -970,18 +464,13 @@ function updateFxNodes() {
   if (!masterBus) return;
   const now = audioCtx.currentTime;
 
-  // Delay
   masterBus.delay.delayTime.setTargetAtTime(fxState.delay.time, now, 0.02);
   masterBus.delayFeedback.gain.setTargetAtTime(fxState.delay.feedback, now, 0.02);
   masterBus.delayWet.gain.setTargetAtTime(fxState.delay.on ? fxState.delay.mix : 0, now, 0.02);
 
-  // Reverb
   masterBus.reverbWet.gain.setTargetAtTime(fxState.reverb.on ? fxState.reverb.mix : 0, now, 0.02);
-
-  // Distortion
   masterBus.distWet.gain.setTargetAtTime(fxState.distortion.on ? fxState.distortion.mix : 0, now, 0.02);
 
-  // Filter
   if (fxState.filter.on) {
     masterBus.filter.type = fxState.filter.type;
     masterBus.filter.frequency.setTargetAtTime(fxState.filter.cutoff, now, 0.02);
@@ -998,14 +487,15 @@ function getChannelDestination(channelId) {
 }
 
 // ==========================================
-// INSTRUMENT SYNTHESIS ENGINES
+// INSTRUMENT SYNTHESIS ENGINES (WITH PITCH)
 // ==========================================
-function playKick(time, vol, pan) {
+function playKick(time, vol, pan, freq) {
   const osc = audioCtx.createOscillator();
   const gain = audioCtx.createGain();
   const dest = getChannelDestination('kick');
 
-  osc.frequency.setValueAtTime(150, time);
+  const startPitch = freq ? freq * 2.2 : 150;
+  osc.frequency.setValueAtTime(startPitch, time);
   osc.frequency.exponentialRampToValueAtTime(0.01, time + 0.4);
 
   gain.gain.setValueAtTime(vol, time);
@@ -1100,20 +590,23 @@ function playClap(time, vol, pan) {
   noise.stop(time + 0.25);
 }
 
-function playBass(time, vol, pan) {
+function playBass(time, vol, pan, freq) {
+  const baseFreq = freq || 65.41;
   const osc = audioCtx.createOscillator();
   const filter = audioCtx.createBiquadFilter();
   const gain = audioCtx.createGain();
 
   osc.type = 'sawtooth';
-  osc.frequency.setValueAtTime(65.41, time);
+  osc.frequency.setValueAtTime(baseFreq, time);
 
+  // Dynamic resonant acid filter sweep
   filter.type = 'lowpass';
-  filter.frequency.setValueAtTime(600, time);
-  filter.frequency.exponentialRampToValueAtTime(120, time + 0.2);
+  filter.frequency.setValueAtTime(baseFreq * 8, time);
+  filter.frequency.exponentialRampToValueAtTime(baseFreq * 1.5, time + 0.22);
+  filter.Q.setValueAtTime(4.0, time);
 
-  gain.gain.setValueAtTime(vol * 0.7, time);
-  gain.gain.exponentialRampToValueAtTime(0.001, time + 0.25);
+  gain.gain.setValueAtTime(vol * 0.75, time);
+  gain.gain.exponentialRampToValueAtTime(0.001, time + 0.28);
 
   const dest = getChannelDestination('bass');
   osc.connect(filter);
@@ -1121,19 +614,19 @@ function playBass(time, vol, pan) {
   gain.connect(dest);
 
   osc.start(time);
-  osc.stop(time + 0.28);
+  osc.stop(time + 0.3);
 }
 
-function triggerSample(channelId, time, vol, pan) {
-  if (channelId === 'kick') playKick(time, vol, pan);
+function triggerSample(channelId, time, vol, pan, freq) {
+  if (channelId === 'kick') playKick(time, vol, pan, freq);
   else if (channelId === 'snare') playSnare(time, vol, pan);
   else if (channelId === 'hat') playHat(time, vol, pan);
   else if (channelId === 'clap') playClap(time, vol, pan);
-  else if (channelId === 'bass') playBass(time, vol, pan);
+  else if (channelId === 'bass') playBass(time, vol, pan, freq);
 }
 
 // ==========================================
-// SEQUENCER CLOCK (A Tale of Two Clocks)
+// SEQUENCER CLOCK (Lookahead Scheduler)
 // ==========================================
 let isPlaying = false;
 let currentStep = 0;
@@ -1152,8 +645,16 @@ function nextNote() {
 
 function scheduleStep(stepNumber, time) {
   channels.forEach(ch => {
-    if (!ch.muted && ch.pattern[stepNumber]) {
-      triggerSample(ch.id, time, ch.vol, ch.pan);
+    if (!ch.muted) {
+      if (ch.notes && ch.notes.length > 0) {
+        const stepNotes = ch.notes.filter(n => n.step === stepNumber);
+        stepNotes.forEach(n => {
+          const freq = midiToFreq(n.midi);
+          triggerSample(ch.id, time, ch.vol, ch.pan, freq);
+        });
+      } else if (ch.pattern[stepNumber]) {
+        triggerSample(ch.id, time, ch.vol, ch.pan);
+      }
     }
   });
 
@@ -1223,7 +724,22 @@ function renderRack() {
     nameBtn.title = 'Clique para testar o som';
     nameBtn.onclick = () => {
       initAudio();
-      triggerSample(ch.id, audioCtx.currentTime, ch.vol, ch.pan);
+      const previewFreq = ch.notes && ch.notes.length > 0 ? midiToFreq(ch.notes[0].midi) : undefined;
+      triggerSample(ch.id, audioCtx.currentTime, ch.vol, ch.pan, previewFreq);
+    };
+
+    const prBtn = document.createElement('button');
+    prBtn.className = 'chan-pr-btn';
+    prBtn.textContent = '🎹 Roll';
+    prBtn.title = `Abrir o Piano Roll de ${ch.name}`;
+    prBtn.onclick = () => {
+      document.getElementById('prTargetSelect').value = ch.id;
+      currentPrChannelId = ch.id;
+      renderPianoRoll();
+      const prWin = document.getElementById('pianoRollWindow');
+      prWin.style.display = 'flex';
+      document.getElementById('togglePrBtn').classList.add('active');
+      prWin.scrollIntoView({ behavior: 'smooth' });
     };
 
     const volGroup = document.createElement('div');
@@ -1237,6 +753,7 @@ function renderRack() {
     meta.appendChild(trackBadge);
     meta.appendChild(muteBtn);
     meta.appendChild(nameBtn);
+    meta.appendChild(prBtn);
     meta.appendChild(volGroup);
     row.appendChild(meta);
 
@@ -1248,6 +765,9 @@ function renderRack() {
       const isGroupA = Math.floor(s / 4) % 2 === 0;
       pad.className = `step-pad ${isGroupA ? 'group-a' : 'group-b'}`;
       if (ch.pattern[s]) pad.classList.add('active');
+      if (ch.notes && ch.notes.some(n => n.step === s)) {
+        pad.classList.add('has-piano-notes');
+      }
       pad.dataset.step = s;
       pad.dataset.channel = chIdx;
 
@@ -1255,8 +775,26 @@ function renderRack() {
         ch.pattern[s] = ch.pattern[s] ? 0 : 1;
         pad.classList.toggle('active', !!ch.pattern[s]);
         initAudio();
+
         if (ch.pattern[s]) {
-          triggerSample(ch.id, audioCtx.currentTime, ch.vol, ch.pan);
+          // If turning on and no note in piano roll, create root note C2 (midi 24)
+          if (ch.notes && !ch.notes.some(n => n.step === s)) {
+            ch.notes.push({ step: s, midi: 24 });
+            pad.classList.add('has-piano-notes');
+          }
+          const noteObj = ch.notes ? ch.notes.find(n => n.step === s) : null;
+          const freq = noteObj ? midiToFreq(noteObj.midi) : undefined;
+          triggerSample(ch.id, audioCtx.currentTime, ch.vol, ch.pan, freq);
+        } else {
+          // If turning off, remove any notes at this step
+          if (ch.notes) {
+            ch.notes = ch.notes.filter(n => n.step !== s);
+            pad.classList.remove('has-piano-notes');
+          }
+        }
+
+        if (currentPrChannelId === ch.id) {
+          renderPianoRoll();
         }
       };
 
@@ -1268,6 +806,7 @@ function renderRack() {
 }
 
 function updateVisualCursor(step) {
+  // Update step pads in Channel Rack
   const pads = document.querySelectorAll('.step-pad');
   pads.forEach(p => {
     if (parseInt(p.dataset.step, 10) === step) {
@@ -1277,12 +816,213 @@ function updateVisualCursor(step) {
     }
   });
 
+  // Update LCD display
   const stepCounter = document.getElementById('stepCounterDisplay');
   if (step >= 0) {
     stepCounter.textContent = (step + 1).toString().padStart(2, '0');
   } else {
     stepCounter.textContent = '--';
   }
+
+  // Update Piano Roll Playhead
+  updatePianoRollPlayhead(step);
+}
+
+// ==========================================
+// PIANO ROLL ENGINE & INTERFACE
+// ==========================================
+let currentPrChannelId = 'bass';
+
+function renderPianoRollRuler() {
+  const rulerSteps = document.getElementById('prRulerSteps');
+  rulerSteps.innerHTML = '';
+  for (let s = 0; s < 16; s++) {
+    const bar = Math.floor(s / 4) + 1;
+    const beat = (s % 4) + 1;
+    const stepDiv = document.createElement('div');
+    stepDiv.className = `pr-ruler-step ${beat === 1 ? 'beat-start' : ''}`;
+    stepDiv.textContent = `${bar}.${beat}`;
+    rulerSteps.appendChild(stepDiv);
+  }
+}
+
+function renderPianoRoll() {
+  const currentCh = channels.find(c => c.id === currentPrChannelId);
+  if (!currentCh) return;
+
+  const kbContainer = document.getElementById('prKeyboard');
+  const gridContainer = document.getElementById('prGridContainer');
+  
+  // Retain playhead
+  let playhead = document.getElementById('prPlayhead');
+  if (!playhead) {
+    playhead = document.createElement('div');
+    playhead.id = 'prPlayhead';
+    playhead.className = 'pr-playhead';
+  }
+
+  kbContainer.innerHTML = '';
+  gridContainer.innerHTML = '';
+  gridContainer.appendChild(playhead);
+
+  PR_NOTE_MAP.forEach(noteItem => {
+    // 1. Render Left Piano Key
+    const key = document.createElement('div');
+    key.className = `pr-key ${noteItem.isBlack ? 'black-key' : 'white-key'}`;
+    key.textContent = noteItem.name;
+    key.title = `Tocar ${noteItem.name}`;
+    key.onmousedown = () => {
+      initAudio();
+      key.classList.add('active');
+      triggerSample(currentCh.id, audioCtx.currentTime, currentCh.vol, currentCh.pan, midiToFreq(noteItem.midi));
+    };
+    key.onmouseup = () => key.classList.remove('active');
+    key.onmouseleave = () => key.classList.remove('active');
+    kbContainer.appendChild(key);
+
+    // 2. Render Grid Row
+    const row = document.createElement('div');
+    row.className = `pr-row ${noteItem.isBlack ? 'black-row' : 'white-row'}`;
+    row.dataset.midi = noteItem.midi;
+
+    for (let s = 0; s < 16; s++) {
+      const cell = document.createElement('div');
+      const isBeatStart = (s % 4 === 0);
+      cell.className = `pr-cell ${isBeatStart ? 'beat-bar' : ''}`;
+      cell.dataset.step = s;
+      cell.dataset.midi = noteItem.midi;
+
+      // Check if there is an active note here
+      const hasNote = currentCh.notes && currentCh.notes.some(n => n.step === s && n.midi === noteItem.midi);
+      if (hasNote) {
+        const chip = document.createElement('div');
+        chip.className = 'pr-note-chip';
+        chip.textContent = noteItem.name;
+        cell.appendChild(chip);
+      }
+
+      cell.onclick = () => {
+        initAudio();
+        toggleNote(currentCh, s, noteItem.midi);
+      };
+
+      row.appendChild(cell);
+    }
+    gridContainer.appendChild(row);
+  });
+}
+
+function toggleNote(channel, step, midi) {
+  if (!channel.notes) channel.notes = [];
+
+  const existingNoteIdx = channel.notes.findIndex(n => n.step === step && n.midi === midi);
+
+  if (existingNoteIdx !== -1) {
+    // Remove note
+    channel.notes.splice(existingNoteIdx, 1);
+  } else {
+    // Monophonic on same step: remove previous note at this step
+    channel.notes = channel.notes.filter(n => n.step !== step);
+    // Add new note
+    channel.notes.push({ step, midi });
+    // Preview sound
+    triggerSample(channel.id, audioCtx.currentTime, channel.vol, channel.pan, midiToFreq(midi));
+  }
+
+  // Sync Channel Rack pattern
+  channel.pattern[step] = channel.notes.some(n => n.step === step) ? 1 : 0;
+
+  renderPianoRoll();
+  renderRack();
+}
+
+function updatePianoRollPlayhead(step) {
+  const playhead = document.getElementById('prPlayhead');
+  const grid = document.getElementById('prGridContainer');
+  if (!playhead || !grid) return;
+
+  if (step >= 0 && isPlaying) {
+    playhead.style.display = 'block';
+    const stepWidth = grid.clientWidth / 16;
+    playhead.style.left = `${step * stepWidth}px`;
+  } else {
+    playhead.style.display = 'none';
+  }
+}
+
+// Setup Piano Roll Tools
+function setupPianoRollControls() {
+  renderPianoRollRuler();
+
+  const targetSelect = document.getElementById('prTargetSelect');
+  targetSelect.onchange = (e) => {
+    currentPrChannelId = e.target.value;
+    renderPianoRoll();
+  };
+
+  // Octave Down
+  document.getElementById('prOctaveDownBtn').onclick = () => {
+    const ch = channels.find(c => c.id === currentPrChannelId);
+    if (!ch || !ch.notes) return;
+    ch.notes.forEach(n => {
+      if (n.midi - 12 >= 24) n.midi -= 12;
+    });
+    renderPianoRoll();
+    initAudio();
+    if (ch.notes.length > 0) {
+      triggerSample(ch.id, audioCtx.currentTime, ch.vol, ch.pan, midiToFreq(ch.notes[0].midi));
+    }
+  };
+
+  // Octave Up
+  document.getElementById('prOctaveUpBtn').onclick = () => {
+    const ch = channels.find(c => c.id === currentPrChannelId);
+    if (!ch || !ch.notes) return;
+    ch.notes.forEach(n => {
+      if (n.midi + 12 <= 48) n.midi += 12;
+    });
+    renderPianoRoll();
+    initAudio();
+    if (ch.notes.length > 0) {
+      triggerSample(ch.id, audioCtx.currentTime, ch.vol, ch.pan, midiToFreq(ch.notes[0].midi));
+    }
+  };
+
+  // Acid Preset
+  document.getElementById('prPresetAcidBtn').onclick = () => {
+    const ch = channels.find(c => c.id === currentPrChannelId);
+    if (!ch) return;
+    ch.notes = [
+      { step: 0, midi: 24 }, // C2
+      { step: 3, midi: 27 }, // D#2
+      { step: 6, midi: 31 }, // G2
+      { step: 9, midi: 34 }, // A#2
+      { step: 12, midi: 36 }, // C3
+      { step: 14, midi: 31 }  // G2
+    ];
+    ch.pattern = [1,0,0,1, 0,0,1,0, 0,1,0,0, 1,0,1,0];
+    renderPianoRoll();
+    renderRack();
+    initAudio();
+    triggerSample(ch.id, audioCtx.currentTime, ch.vol, ch.pan, midiToFreq(24));
+  };
+
+  // Clear All Notes
+  document.getElementById('prClearBtn').onclick = () => {
+    const ch = channels.find(c => c.id === currentPrChannelId);
+    if (!ch) return;
+    ch.notes = [];
+    ch.pattern = [0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0];
+    renderPianoRoll();
+    renderRack();
+  };
+
+  // Close Piano Roll
+  document.getElementById('prCloseBtn').onclick = () => {
+    const prWin = document.getElementById('pianoRollWindow');
+    prWin.style.display = 'none';
+    document.getElementById('togglePrBtn').classList.remove('active');
+  };
 }
 
 // ==========================================
@@ -1380,7 +1120,6 @@ function startVuMeterLoop() {
       const w = canvas.width;
       const h = canvas.height;
 
-      // Extract RMS volume from analyser time-domain
       node.analyser.getByteTimeDomainData(timeData);
       let sum = 0;
       for (let i = 0; i < timeData.length; i++) {
@@ -1390,18 +1129,15 @@ function startVuMeterLoop() {
       const rms = Math.sqrt(sum / timeData.length);
       const targetLevel = Math.min(1.0, rms * 4.5);
 
-      // Smooth decay animation
       if (targetLevel > node.currentPeak) {
         node.currentPeak = targetLevel;
       } else {
         node.currentPeak = Math.max(0, node.currentPeak - 0.045);
       }
 
-      // Draw background
       ctx.fillStyle = '#0b0c0e';
       ctx.fillRect(0, 0, w, h);
 
-      // Draw LED Segments (24 blocks)
       const numSegments = 24;
       const segH = 4;
       const segGap = 1;
@@ -1435,7 +1171,6 @@ function startVuMeterLoop() {
 // FX SLOTS EVENT HANDLERS
 // ==========================================
 function setupFxControls() {
-  // Delay Controls
   const delayToggle = document.getElementById('fxDelayToggle');
   const delayTime = document.getElementById('delayTimeSlider');
   const delayFeedback = document.getElementById('delayFeedbackSlider');
@@ -1464,7 +1199,6 @@ function setupFxControls() {
     updateFxNodes();
   };
 
-  // Reverb Controls
   const reverbToggle = document.getElementById('fxReverbToggle');
   const reverbDecay = document.getElementById('reverbDecaySlider');
   const reverbMix = document.getElementById('reverbMixSlider');
@@ -1489,7 +1223,6 @@ function setupFxControls() {
     updateFxNodes();
   };
 
-  // Distortion Controls
   const distToggle = document.getElementById('fxDistToggle');
   const distDrive = document.getElementById('distDriveSlider');
   const distMix = document.getElementById('distMixSlider');
@@ -1514,7 +1247,6 @@ function setupFxControls() {
     updateFxNodes();
   };
 
-  // Filter Controls
   const filterToggle = document.getElementById('fxFilterToggle');
   const filterType = document.getElementById('filterTypeSelect');
   const filterCutoff = document.getElementById('filterCutoffSlider');
@@ -1588,16 +1320,28 @@ bpmInput.onkeydown = (e) => {
   }
 };
 
-// Panel Toggle Buttons (Channel Rack / Mixer)
+// Panel Toggle Buttons (Channel Rack / Piano Roll / Mixer)
 const rackWin = document.getElementById('channelRackWindow');
+const prWin = document.getElementById('pianoRollWindow');
 const mixerWin = document.getElementById('mixerWindow');
+
 const toggleRackBtn = document.getElementById('toggleRackBtn');
+const togglePrBtn = document.getElementById('togglePrBtn');
 const toggleMixerBtn = document.getElementById('toggleMixerBtn');
 
 toggleRackBtn.onclick = () => {
   const isHidden = rackWin.style.display === 'none';
   rackWin.style.display = isHidden ? 'block' : 'none';
   toggleRackBtn.classList.toggle('active', isHidden);
+};
+
+togglePrBtn.onclick = () => {
+  const isHidden = prWin.style.display === 'none';
+  prWin.style.display = isHidden ? 'flex' : 'none';
+  togglePrBtn.classList.toggle('active', isHidden);
+  if (isHidden) {
+    renderPianoRoll();
+  }
 };
 
 toggleMixerBtn.onclick = () => {
@@ -1610,6 +1354,8 @@ toggleMixerBtn.onclick = () => {
 renderRack();
 renderMixerStrips();
 setupFxControls();
+setupPianoRollControls();
+renderPianoRoll();
 </script>
 </body>
 </html>

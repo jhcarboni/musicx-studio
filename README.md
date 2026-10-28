@@ -76,18 +76,22 @@ graph LR
 - [x] Controle de BPM com display LCD interativo digitável e sincronizado ao slider.
 - [x] Configuração para GitHub Codespaces (`.devcontainer`).
 
-### 🚀 Fase 2: Mixer e Rack de Efeitos (Foco Atual)
-- [ ] **Interface do Mixer**: Pistas de canais (Master + 5 canais dedicados) com faders verticais.
-- [ ] **Medidores de Pico (VU Meters Animados)**: Canvas com barra luminosa em tempo real via `AnalyserNode`.
-- [ ] **Rack de Efeitos (Master / Pistas)**:
-  - **Fruity Delay**: Eco estéreo com feedback e tempo sincronizado ao andamento.
-  - **Fruity Reeverb**: Convolução / algoritmo de ambiência e espaço.
-  - **Overdrive / Distorção**: Aquecimento e saturação de harmônicos via `WaveShaperNode`.
-  - **Filtro Master (Cutoff & Resonance)**: Filtro passa-baixa e passa-alta dinâmico.
-- [ ] **Roteamento de Canais**: Cada som do Channel Rack ligado à sua respectiva pista no Mixer.
+### ✅ Fase 2: Mixer e Rack de Efeitos (Concluída)
+- [x] **Interface do Mixer**: Pistas de canais (Master + 5 canais dedicados) com faders verticais e panorâmica.
+- [x] **Medidores de Pico (VU Meters Animados)**: Canvas com barra luminosa em tempo real via `AnalyserNode`.
+- [x] **Rack de Efeitos (Master Insert FX)**:
+  - **Fruity Delay 3**: Eco estéreo com feedback e tempo sincronizado ao andamento.
+  - **Fruity Reeverb 2**: Convolução / algoritmo de ambiência e espaço.
+  - **Fast Distortion**: Aquecimento e saturação de harmônicos via `WaveShaperNode`.
+  - **Master DJ Filter**: Filtro passa-baixa e passa-alta dinâmico com varredura de Cutoff e Ressonância ($Q$).
+- [x] **Roteamento de Canais**: Cada som do Channel Rack ligado à sua respectiva pista no Mixer.
 
-### ⏳ Fase 3: Piano Roll Melódico e Carregador de Samples
-- [ ] Visualizador de Piano Roll para o sintetizador 303.
+### 🚀 Fase 3: Piano Roll Melódico e Carregador de Samples (Em Andamento)
+- [x] **Piano Roll Interativo**: Grade melódica de 2 oitavas (C2 a C4, 24 semitons) para compor melodias e linhas de baixo.
+- [x] **Teclado de Piano Vertical**: Teclas brancas e pretas clicáveis com pré-escuta instantânea de afinação.
+- [x] **Sincronização Bidirecional**: Notas desenhadas no Piano Roll acionam os pads do Channel Rack com indicador visual `🎹`.
+- [x] **Ferramentas de Composição**: Botões de transposição por oitava (`+ Octave` / `- Octave`), preset de riff Acid e limpeza rápida.
+- [x] **Playhead Luminoso Sincronizado**: Linha vertical ciano que percorre os compassos em tempo real durante a reprodução.
 - [ ] Drag-and-drop de arquivos `.wav` do computador para os pads.
 - [ ] Sistema de Swing/Groove global e controle de Velocity por passo.
 
@@ -103,7 +107,8 @@ graph LR
 musicx-studio/
 ├── .devcontainer/
 │   └── devcontainer.json   # Configuração para GitHub Codespaces (Live Server e portas)
-├── index.html              # Aplicação completa (Estrutura, Estilização e Audio Engine)
+├── index.html              # Interface e motor de áudio Web Audio API
+├── style.css               # Folha de estilos modular (estética FL Studio)
 ├── package.json            # Scripts de desenvolvimento rápido
 └── README.md               # Documentação do projeto
 ```

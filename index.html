@@ -1,1 +1,543 @@
-teste
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Web FL Studio - Channel Rack Prototype</title>
+<style>
+  :root {
+    --bg-main: #1e2124;
+    --bg-darker: #16181b;
+    --panel-header: #282c31;
+    --border-dark: #101214;
+    --border-light: #383e46;
+    --btn-off: #32373e;
+    --btn-orange: #c86328;
+    --btn-orange-active: #ff8533;
+    --btn-charcoal: #3e444c;
+    --btn-charcoal-active: #6e7987;
+    --text-bright: #e6edf3;
+    --lcd-bg: #0d1117;
+    --lcd-green: #39d353;
+  }
+
+  * { box-sizing: border-box; user-select: none; }
+  body {
+    margin: 0;
+    padding: 20px;
+    background: #121316;
+    color: var(--text-bright);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 13px;
+  }
+
+  .fl-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--panel-header);
+    border: 1px solid var(--border-light);
+    border-bottom: 2px solid var(--border-dark);
+    padding: 8px 14px;
+    border-radius: 4px 4px 0 0;
+  }
+
+  .transport-btn {
+    background: linear-gradient(to bottom, #40464f, #2a2e35);
+    border: 1px solid var(--border-dark);
+    color: var(--text-bright);
+    padding: 6px 14px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.15);
+  }
+  .transport-btn:active, .transport-btn.active {
+    background: #1a1c20;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.6);
+    border-color: #000;
+  }
+  .transport-btn.play.active { color: var(--lcd-green); }
+
+  .lcd-display {
+    background: var(--lcd-bg);
+    border: 1px solid #202428;
+    border-radius: 3px;
+    padding: 4px 10px;
+    color: var(--lcd-green);
+    font-family: "Courier New", Courier, monospace;
+    font-size: 15px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.8);
+  }
+  .lcd-label { color: #555; font-size: 10px; }
+
+  .channel-rack {
+    background: var(--bg-main);
+    border: 1px solid var(--border-dark);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    border-radius: 0 0 4px 4px;
+    padding: 12px;
+  }
+
+  .rack-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #2a2f35;
+  }
+  .rack-title {
+    font-weight: bold;
+    color: #a0aab5;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .channel-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+    background: var(--bg-darker);
+    padding: 4px 6px;
+    border-radius: 3px;
+    border: 1px solid #22262b;
+  }
+
+  .chan-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 220px;
+  }
+  .chan-mute {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #39d353;
+    border: 1px solid #1a1c20;
+    cursor: pointer;
+  }
+  .chan-mute.muted { background: #444; }
+
+  .chan-name-btn {
+    background: #2d333b;
+    border: 1px solid #414852;
+    color: #c9d1d9;
+    padding: 6px 10px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 600;
+    width: 95px;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .knob-group {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .knob-label { font-size: 9px; color: #777; width: 14px; text-align: center; }
+  .slider-knob {
+    -webkit-appearance: none;
+    width: 38px;
+    height: 4px;
+    background: #111;
+    border-radius: 2px;
+    outline: none;
+  }
+  .slider-knob::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #8b949e;
+    cursor: pointer;
+  }
+
+  .steps-container {
+    display: flex;
+    gap: 3px;
+    flex: 1;
+  }
+  .step-pad {
+    flex: 1;
+    height: 28px;
+    border-radius: 2px;
+    cursor: pointer;
+    border: 1px solid rgba(0,0,0,0.5);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.1), 0 1px 2px rgba(0,0,0,0.4);
+    position: relative;
+    transition: transform 0.05s ease;
+  }
+  .step-pad:active { transform: scale(0.96); }
+
+  .group-a { background: var(--btn-charcoal); }
+  .group-b { background: var(--btn-orange); }
+
+  .step-pad.active.group-a {
+    background: var(--btn-charcoal-active);
+    box-shadow: 0 0 6px rgba(255,255,255,0.6), inset 0 0 4px #fff;
+  }
+  .step-pad.active.group-b {
+    background: var(--btn-orange-active);
+    box-shadow: 0 0 8px rgba(255,133,51,0.8), inset 0 0 4px #ffe6d4;
+  }
+
+  .step-pad.current-step::after {
+    content: "";
+    position: absolute;
+    top: -3px;
+    left: 2px;
+    right: 2px;
+    height: 2px;
+    background: #00f0ff;
+    border-radius: 1px;
+    box-shadow: 0 0 6px #00f0ff;
+  }
+</style>
+</head>
+<body>
+
+<div class="fl-toolbar">
+  <button id="btnPlay" class="transport-btn play">▶ PLAY</button>
+  <button id="btnStop" class="transport-btn">■ STOP</button>
+  
+  <div class="lcd-display">
+    <span class="lcd-label">BPM</span>
+    <span id="bpmDisplay">130</span>
+  </div>
+  <input type="range" id="bpmSlider" min="60" max="180" value="130" style="width: 100px;">
+
+  <div class="lcd-display">
+    <span class="lcd-label">STEP</span>
+    <span id="stepCounterDisplay">--</span>
+  </div>
+</div>
+
+<div class="channel-rack">
+  <div class="rack-header">
+    <span class="rack-title">Channel Rack &bull; Pattern 1</span>
+    <span style="color: #666; font-size: 11px;">16 Steps (4/4)</span>
+  </div>
+  <div id="channelsContainer"></div>
+</div>
+
+<script>
+let audioCtx = null;
+
+const channels = [
+  { id: 'kick', name: 'Kick 808', vol: 0.9, pan: 0, muted: false, pattern: [1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0] },
+  { id: 'snare', name: 'Snare Hard', vol: 0.75, pan: 0, muted: false, pattern: [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0] },
+  { id: 'hat', name: 'Hat Closed', vol: 0.6, pan: 0.1, muted: false, pattern: [1,0,1,0, 1,0,1,0, 1,0,1,0, 1,0,1,0] },
+  { id: 'clap', name: 'Clap 90s', vol: 0.7, pan: -0.1, muted: false, pattern: [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0] },
+  { id: 'bass', name: '303 Bass', vol: 0.8, pan: 0, muted: false, pattern: [1,0,0,1, 0,0,1,0, 0,1,0,0, 1,0,1,0] }
+];
+
+function initAudio() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+}
+
+function playKick(time, vol, pan) {
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  const panner = audioCtx.createStereoPanner ? audioCtx.createStereoPanner() : null;
+
+  osc.frequency.setValueAtTime(150, time);
+  osc.frequency.exponentialRampToValueAtTime(0.01, time + 0.4);
+
+  gain.gain.setValueAtTime(vol, time);
+  gain.gain.exponentialRampToValueAtTime(0.001, time + 0.4);
+
+  if (panner) {
+    panner.pan.setValueAtTime(pan, time);
+    osc.connect(gain);
+    gain.connect(panner);
+    panner.connect(audioCtx.destination);
+  } else {
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+  }
+
+  osc.start(time);
+  osc.stop(time + 0.45);
+}
+
+function playSnare(time, vol, pan) {
+  const bufferSize = audioCtx.sampleRate * 0.2;
+  const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < bufferSize; i++) {
+    data[i] = Math.random() * 2 - 1;
+  }
+  const noise = audioCtx.createBufferSource();
+  noise.buffer = buffer;
+
+  const filter = audioCtx.createBiquadFilter();
+  filter.type = 'highpass';
+  filter.frequency.setValueAtTime(1000, time);
+
+  const gain = audioCtx.createGain();
+  gain.gain.setValueAtTime(vol * 0.8, time);
+  gain.gain.exponentialRampToValueAtTime(0.01, time + 0.18);
+
+  noise.connect(filter);
+  filter.connect(gain);
+  gain.connect(audioCtx.destination);
+
+  noise.start(time);
+  noise.stop(time + 0.2);
+}
+
+function playHat(time, vol, pan) {
+  const bufferSize = audioCtx.sampleRate * 0.05;
+  const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < bufferSize; i++) {
+    data[i] = Math.random() * 2 - 1;
+  }
+  const noise = audioCtx.createBufferSource();
+  noise.buffer = buffer;
+
+  const filter = audioCtx.createBiquadFilter();
+  filter.type = 'highpass';
+  filter.frequency.setValueAtTime(7000, time);
+
+  const gain = audioCtx.createGain();
+  gain.gain.setValueAtTime(vol * 0.5, time);
+  gain.gain.exponentialRampToValueAtTime(0.001, time + 0.05);
+
+  noise.connect(filter);
+  filter.connect(gain);
+  gain.connect(audioCtx.destination);
+
+  noise.start(time);
+  noise.stop(time + 0.06);
+}
+
+function playClap(time, vol, pan) {
+  const bufferSize = audioCtx.sampleRate * 0.25;
+  const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < bufferSize; i++) {
+    data[i] = Math.random() * 2 - 1;
+  }
+  const noise = audioCtx.createBufferSource();
+  noise.buffer = buffer;
+
+  const filter = audioCtx.createBiquadFilter();
+  filter.type = 'bandpass';
+  filter.frequency.setValueAtTime(1200, time);
+  filter.Q.setValueAtTime(2, time);
+
+  const gain = audioCtx.createGain();
+  gain.gain.setValueAtTime(vol * 0.7, time);
+  gain.gain.exponentialRampToValueAtTime(0.001, time + 0.22);
+
+  noise.connect(filter);
+  filter.connect(gain);
+  gain.connect(audioCtx.destination);
+
+  noise.start(time);
+  noise.stop(time + 0.25);
+}
+
+function playBass(time, vol, pan) {
+  const osc = audioCtx.createOscillator();
+  const filter = audioCtx.createBiquadFilter();
+  const gain = audioCtx.createGain();
+
+  osc.type = 'sawtooth';
+  osc.frequency.setValueAtTime(65.41, time);
+
+  filter.type = 'lowpass';
+  filter.frequency.setValueAtTime(600, time);
+  filter.frequency.exponentialRampToValueAtTime(120, time + 0.2);
+
+  gain.gain.setValueAtTime(vol * 0.7, time);
+  gain.gain.exponentialRampToValueAtTime(0.001, time + 0.25);
+
+  osc.connect(filter);
+  filter.connect(gain);
+  gain.connect(audioCtx.destination);
+
+  osc.start(time);
+  osc.stop(time + 0.28);
+}
+
+function triggerSample(channelId, time, vol, pan) {
+  if (channelId === 'kick') playKick(time, vol, pan);
+  else if (channelId === 'snare') playSnare(time, vol, pan);
+  else if (channelId === 'hat') playHat(time, vol, pan);
+  else if (channelId === 'clap') playClap(time, vol, pan);
+  else if (channelId === 'bass') playBass(time, vol, pan);
+}
+
+let isPlaying = false;
+let currentStep = 0;
+let bpm = 130;
+let nextNoteTime = 0.0;
+const lookahead = 25.0;
+const scheduleAheadTime = 0.1;
+let timerID = null;
+
+function nextNote() {
+  const secondsPerBeat = 60.0 / bpm;
+  const secondsPerStep = secondsPerBeat / 4;
+  nextNoteTime += secondsPerStep;
+  currentStep = (currentStep + 1) % 16;
+}
+
+function scheduleStep(stepNumber, time) {
+  channels.forEach(ch => {
+    if (!ch.muted && ch.pattern[stepNumber]) {
+      triggerSample(ch.id, time, ch.vol, ch.pan);
+    }
+  });
+
+  const delay = Math.max(0, (time - audioCtx.currentTime) * 1000);
+  setTimeout(() => {
+    updateVisualCursor(stepNumber);
+  }, delay);
+}
+
+function scheduler() {
+  while (nextNoteTime < audioCtx.currentTime + scheduleAheadTime) {
+    scheduleStep(currentStep, nextNoteTime);
+    nextNote();
+  }
+  if (isPlaying) {
+    timerID = setTimeout(scheduler, lookahead);
+  }
+}
+
+function play() {
+  initAudio();
+  if (isPlaying) return;
+  isPlaying = true;
+  currentStep = 0;
+  nextNoteTime = audioCtx.currentTime + 0.05;
+  document.getElementById('btnPlay').classList.add('active');
+  scheduler();
+}
+
+function stop() {
+  isPlaying = false;
+  clearTimeout(timerID);
+  currentStep = 0;
+  document.getElementById('btnPlay').classList.remove('active');
+  updateVisualCursor(-1);
+}
+
+function renderRack() {
+  const container = document.getElementById('channelsContainer');
+  container.innerHTML = '';
+
+  channels.forEach((ch, chIdx) => {
+    const row = document.createElement('div');
+    row.className = 'channel-row';
+
+    const meta = document.createElement('div');
+    meta.className = 'chan-meta';
+
+    const muteBtn = document.createElement('div');
+    muteBtn.className = 'chan-mute' + (ch.muted ? ' muted' : '');
+    muteBtn.onclick = () => {
+      ch.muted = !ch.muted;
+      muteBtn.classList.toggle('muted', ch.muted);
+    };
+
+    const nameBtn = document.createElement('div');
+    nameBtn.className = 'chan-name-btn';
+    nameBtn.textContent = ch.name;
+
+    const volGroup = document.createElement('div');
+    volGroup.className = 'knob-group';
+    volGroup.innerHTML = `
+      <span class="knob-label">V</span>
+      <input type="range" class="slider-knob" min="0" max="1" step="0.05" value="${ch.vol}">
+    `;
+    volGroup.querySelector('input').oninput = (e) => ch.vol = parseFloat(e.target.value);
+
+    meta.appendChild(muteBtn);
+    meta.appendChild(nameBtn);
+    meta.appendChild(volGroup);
+    row.appendChild(meta);
+
+    const stepsDiv = document.createElement('div');
+    stepsDiv.className = 'steps-container';
+
+    for (let s = 0; s < 16; s++) {
+      const pad = document.createElement('div');
+      const isGroupA = Math.floor(s / 4) % 2 === 0;
+      pad.className = `step-pad ${isGroupA ? 'group-a' : 'group-b'}`;
+      if (ch.pattern[s]) pad.classList.add('active');
+      pad.dataset.step = s;
+      pad.dataset.channel = chIdx;
+
+      pad.onclick = () => {
+        ch.pattern[s] = ch.pattern[s] ? 0 : 1;
+        pad.classList.toggle('active', !!ch.pattern[s]);
+        initAudio();
+        if (ch.pattern[s]) {
+          triggerSample(ch.id, audioCtx.currentTime, ch.vol, ch.pan);
+        }
+      };
+
+      stepsDiv.appendChild(pad);
+    }
+    row.appendChild(stepsDiv);
+    container.appendChild(row);
+  });
+}
+
+function updateVisualCursor(step) {
+  const pads = document.querySelectorAll('.step-pad');
+  pads.forEach(p => {
+    if (parseInt(p.dataset.step, 10) === step) {
+      p.classList.add('current-step');
+    } else {
+      p.classList.remove('current-step');
+    }
+  });
+
+  const stepCounter = document.getElementById('stepCounterDisplay');
+  if (step >= 0) {
+    stepCounter.textContent = (step + 1).toString().padStart(2, '0');
+  } else {
+    stepCounter.textContent = '--';
+  }
+}
+
+document.getElementById('btnPlay').onclick = play;
+document.getElementById('btnStop').onclick = stop;
+
+const bpmSlider = document.getElementById('bpmSlider');
+const bpmDisplay = document.getElementById('bpmDisplay');
+bpmSlider.oninput = (e) => {
+  bpm = parseInt(e.target.value, 10);
+  bpmDisplay.textContent = bpm;
+};
+
+renderRack();
+</script>
+</body>
+</html>

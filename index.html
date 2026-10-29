@@ -41,8 +41,20 @@
 <!-- CHANNEL RACK -->
 <div id="channelRackWindow" class="channel-rack">
   <div class="rack-header">
-    <span class="rack-title">🎹 Channel Rack &bull; Pattern 1</span>
-    <span style="color: #666; font-size: 11px;">16 Steps (4/4) &bull; Zero Samples / Realtime Synthesis</span>
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <span class="rack-title">🎹 Channel Rack &bull; Pattern 1</span>
+      <span style="color: #666; font-size: 11px;">16 Steps (4/4)</span>
+    </div>
+    <div class="rack-header-controls">
+      <div class="swing-control-wrap" title="Global Swing / Shuffle (Groove nos tempos pares)">
+        <span class="swing-label">SWING</span>
+        <input type="range" id="swingSlider" class="swing-slider" min="0" max="100" value="0">
+        <span id="swingVal" class="swing-val">0%</span>
+      </div>
+      <button id="toggleGraphEditorBtn" class="graph-editor-btn" title="Alternar Graph Editor de Velocidade por Passo">
+        📊 Velocity
+      </button>
+    </div>
   </div>
   <div id="channelsContainer"></div>
 </div>
@@ -249,10 +261,26 @@ let audioCtx = null;
 
 // Channel Rack Instrument Definitions
 const channels = [
-  { id: 'kick', name: 'Kick 808', vol: 0.9, pan: 0, muted: false, trackIdx: 1, notes: [], pattern: [1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0] },
-  { id: 'snare', name: 'Snare Hard', vol: 0.75, pan: 0, muted: false, trackIdx: 2, notes: [], pattern: [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0] },
-  { id: 'hat', name: 'Hat Closed', vol: 0.6, pan: 0.1, muted: false, trackIdx: 3, notes: [], pattern: [1,0,1,0, 1,0,1,0, 1,0,1,0, 1,0,1,0] },
-  { id: 'clap', name: 'Clap 90s', vol: 0.7, pan: -0.1, muted: false, trackIdx: 4, notes: [], pattern: [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0] },
+  { 
+    id: 'kick', name: 'Kick 808', vol: 0.9, pan: 0, muted: false, trackIdx: 1, notes: [],
+    velocities: [0.95, 0.70, 0.70, 0.70, 0.95, 0.70, 0.70, 0.70, 0.95, 0.70, 0.70, 0.70, 0.95, 0.70, 0.70, 0.70],
+    pattern: [1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0] 
+  },
+  { 
+    id: 'snare', name: 'Snare Hard', vol: 0.75, pan: 0, muted: false, trackIdx: 2, notes: [],
+    velocities: [0.70, 0.70, 0.70, 0.70, 0.90, 0.70, 0.70, 0.70, 0.70, 0.70, 0.70, 0.70, 0.90, 0.70, 0.70, 0.70],
+    pattern: [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0] 
+  },
+  { 
+    id: 'hat', name: 'Hat Closed', vol: 0.6, pan: 0.1, muted: false, trackIdx: 3, notes: [],
+    velocities: [0.90, 0.45, 0.75, 0.45, 0.90, 0.45, 0.75, 0.45, 0.90, 0.45, 0.75, 0.45, 0.90, 0.45, 0.75, 0.45],
+    pattern: [1,0,1,0, 1,0,1,0, 1,0,1,0, 1,0,1,0] 
+  },
+  { 
+    id: 'clap', name: 'Clap 90s', vol: 0.7, pan: -0.1, muted: false, trackIdx: 4, notes: [],
+    velocities: [0.70, 0.70, 0.70, 0.70, 0.85, 0.70, 0.70, 0.70, 0.70, 0.70, 0.70, 0.70, 0.85, 0.70, 0.70, 0.70],
+    pattern: [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0] 
+  },
   { 
     id: 'bass', 
     name: '303 Bass', 
@@ -268,6 +296,7 @@ const channels = [
       { step: 12, midi: 36 }, // C3
       { step: 14, midi: 31 }  // G2
     ], 
+    velocities: [0.95, 0.75, 0.75, 0.85, 0.75, 0.75, 0.90, 0.75, 0.75, 0.85, 0.75, 0.75, 0.95, 0.75, 0.85, 0.75],
     pattern: [1,0,0,1, 0,0,1,0, 0,1,0,0, 1,0,1,0] 
   }
 ];
@@ -643,22 +672,35 @@ function nextNote() {
   currentStep = (currentStep + 1) % 16;
 }
 
+let swing = 0; // 0 to 100%
+
 function scheduleStep(stepNumber, time) {
+  const secondsPerBeat = 60.0 / bpm;
+  const secondsPerStep = secondsPerBeat / 4;
+
+  // FL Studio Swing: delays off-beat 16th steps (1, 3, 5, 7, 9, 11, 13, 15)
+  const isOddStep = (stepNumber % 2 === 1);
+  const swingDelay = isOddStep ? (swing / 100) * (secondsPerStep * 0.5) : 0;
+  const noteTime = time + swingDelay;
+
   channels.forEach(ch => {
     if (!ch.muted) {
+      const stepVel = (ch.velocities && ch.velocities[stepNumber] !== undefined) ? ch.velocities[stepNumber] : 0.85;
+      const hitVol = ch.vol * stepVel;
+
       if (ch.notes && ch.notes.length > 0) {
         const stepNotes = ch.notes.filter(n => n.step === stepNumber);
         stepNotes.forEach(n => {
           const freq = midiToFreq(n.midi);
-          triggerSample(ch.id, time, ch.vol, ch.pan, freq);
+          triggerSample(ch.id, noteTime, hitVol, ch.pan, freq);
         });
       } else if (ch.pattern[stepNumber]) {
-        triggerSample(ch.id, time, ch.vol, ch.pan);
+        triggerSample(ch.id, noteTime, hitVol, ch.pan);
       }
     }
   });
 
-  const delay = Math.max(0, (time - audioCtx.currentTime) * 1000);
+  const delay = Math.max(0, (noteTime - audioCtx.currentTime) * 1000);
   setTimeout(() => {
     updateVisualCursor(stepNumber);
   }, delay);
@@ -764,7 +806,15 @@ function renderRack() {
       const pad = document.createElement('div');
       const isGroupA = Math.floor(s / 4) % 2 === 0;
       pad.className = `step-pad ${isGroupA ? 'group-a' : 'group-b'}`;
-      if (ch.pattern[s]) pad.classList.add('active');
+      const vel = (ch.velocities && ch.velocities[s] !== undefined) ? ch.velocities[s] : 0.85;
+
+      if (ch.pattern[s]) {
+        pad.classList.add('active');
+        pad.style.opacity = 0.4 + (vel * 0.6);
+      } else {
+        pad.style.opacity = '1';
+      }
+
       if (ch.notes && ch.notes.some(n => n.step === s)) {
         pad.classList.add('has-piano-notes');
       }
@@ -776,7 +826,10 @@ function renderRack() {
         pad.classList.toggle('active', !!ch.pattern[s]);
         initAudio();
 
+        const stepVel = (ch.velocities && ch.velocities[s] !== undefined) ? ch.velocities[s] : 0.85;
+
         if (ch.pattern[s]) {
+          pad.style.opacity = 0.4 + (stepVel * 0.6);
           // If turning on and no note in piano roll, create root note C2 (midi 24)
           if (ch.notes && !ch.notes.some(n => n.step === s)) {
             ch.notes.push({ step: s, midi: 24 });
@@ -784,12 +837,20 @@ function renderRack() {
           }
           const noteObj = ch.notes ? ch.notes.find(n => n.step === s) : null;
           const freq = noteObj ? midiToFreq(noteObj.midi) : undefined;
-          triggerSample(ch.id, audioCtx.currentTime, ch.vol, ch.pan, freq);
+          triggerSample(ch.id, audioCtx.currentTime, ch.vol * stepVel, ch.pan, freq);
         } else {
+          pad.style.opacity = '1';
           // If turning off, remove any notes at this step
           if (ch.notes) {
             ch.notes = ch.notes.filter(n => n.step !== s);
             pad.classList.remove('has-piano-notes');
+          }
+        }
+
+        if (isGraphEditorOpen) {
+          const velSlots = container.querySelectorAll(`.velocity-bar-slot[data-channel="${chIdx}"]`);
+          if (velSlots[s]) {
+            velSlots[s].classList.toggle('active-step', !!ch.pattern[s]);
           }
         }
 
@@ -802,6 +863,71 @@ function renderRack() {
     }
     row.appendChild(stepsDiv);
     container.appendChild(row);
+
+    if (isGraphEditorOpen) {
+      const velRow = document.createElement('div');
+      velRow.className = 'velocity-row';
+
+      const velLabel = document.createElement('div');
+      velLabel.className = 'velocity-label-col';
+      velLabel.textContent = `VELOCITY (${ch.name})`;
+
+      const velContainer = document.createElement('div');
+      velContainer.className = 'velocity-bars-container';
+
+      for (let s = 0; s < 16; s++) {
+        const slot = document.createElement('div');
+        slot.className = 'velocity-bar-slot' + (ch.pattern[s] ? ' active-step' : '');
+        slot.dataset.step = s;
+        slot.dataset.channel = chIdx;
+
+        const fill = document.createElement('div');
+        fill.className = 'velocity-fill';
+        const currentVel = (ch.velocities && ch.velocities[s] !== undefined) ? ch.velocities[s] : 0.85;
+        fill.style.height = `${Math.round(currentVel * 100)}%`;
+
+        const tooltip = document.createElement('div');
+        tooltip.className = 'velocity-tooltip';
+        tooltip.textContent = `${Math.round(currentVel * 100)}%`;
+
+        slot.appendChild(fill);
+        slot.appendChild(tooltip);
+
+        const applyVelocityFromEvent = (e) => {
+          const rect = slot.getBoundingClientRect();
+          const clamped = Math.max(0.1, Math.min(1.0, (rect.bottom - e.clientY) / rect.height));
+          ch.velocities[s] = Math.round(clamped * 100) / 100;
+          fill.style.height = `${Math.round(ch.velocities[s] * 100)}%`;
+          tooltip.textContent = `${Math.round(ch.velocities[s] * 100)}%`;
+
+          const stepPads = row.querySelectorAll('.step-pad');
+          if (stepPads[s] && ch.pattern[s]) {
+            stepPads[s].style.opacity = 0.4 + (ch.velocities[s] * 0.6);
+          }
+
+          initAudio();
+          const previewFreq = ch.notes && ch.notes.length > 0 ? midiToFreq(ch.notes[0].midi) : undefined;
+          triggerSample(ch.id, audioCtx.currentTime, ch.vol * ch.velocities[s], ch.pan, previewFreq);
+        };
+
+        slot.onmousedown = (e) => {
+          isPaintingVelocity = true;
+          applyVelocityFromEvent(e);
+        };
+
+        slot.onmouseenter = (e) => {
+          if (isPaintingVelocity) {
+            applyVelocityFromEvent(e);
+          }
+        };
+
+        velContainer.appendChild(slot);
+      }
+
+      velRow.appendChild(velLabel);
+      velRow.appendChild(velContainer);
+      container.appendChild(velRow);
+    }
   });
 }
 
@@ -1348,6 +1474,26 @@ toggleMixerBtn.onclick = () => {
   const isHidden = mixerWin.style.display === 'none';
   mixerWin.style.display = isHidden ? 'flex' : 'none';
   toggleMixerBtn.classList.toggle('active', isHidden);
+};
+
+// Swing Slider Control
+const swingSlider = document.getElementById('swingSlider');
+const swingVal = document.getElementById('swingVal');
+swingSlider.oninput = (e) => {
+  swing = parseInt(e.target.value, 10);
+  swingVal.textContent = `${swing}%`;
+};
+
+// Graph Editor State & Toggle
+let isGraphEditorOpen = false;
+let isPaintingVelocity = false;
+window.addEventListener('mouseup', () => isPaintingVelocity = false);
+
+const toggleGraphEditorBtn = document.getElementById('toggleGraphEditorBtn');
+toggleGraphEditorBtn.onclick = () => {
+  isGraphEditorOpen = !isGraphEditorOpen;
+  toggleGraphEditorBtn.classList.toggle('active', isGraphEditorOpen);
+  renderRack();
 };
 
 // Initial Render

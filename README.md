@@ -92,8 +92,9 @@ graph LR
 - [x] **Sincronização Bidirecional**: Notas desenhadas no Piano Roll acionam os pads do Channel Rack com indicador visual `🎹`.
 - [x] **Ferramentas de Composição**: Botões de transposição por oitava (`+ Octave` / `- Octave`), preset de riff Acid e limpeza rápida.
 - [x] **Playhead Luminoso Sincronizado**: Linha vertical ciano que percorre os compassos em tempo real durante a reprodução.
+- [x] **Controle de Swing / Groove Global**: Fader de shuffle (0% a 100%) no Channel Rack que atrasa os passos pares para conferir balanço rítmico (House, Trap, Garage).
+- [x] **Graph Editor de Velocity por Passo**: Gaveta de ajuste vertical de volume para cada passo (10% a 100%) com suporte a desenho contínuo por arrasto do mouse e sombreamento nos pads.
 - [ ] Drag-and-drop de arquivos `.wav` do computador para os pads.
-- [ ] Sistema de Swing/Groove global e controle de Velocity por passo.
 
 ### ⏳ Fase 4: Playlist / Arranjador e Exportação
 - [ ] Timeline horizontal multi-pistas com múltiplos Patterns.

@@ -51,11 +51,13 @@ export const TopToolbar: React.FC = () => {
         {/* Logo & Brand */}
         <div className="flex items-center gap-2">
           <span className="text-xl">🎛️</span>
-          <div className="flex flex-col">
-            <span className="text-sm font-bold tracking-wider text-white flex items-center gap-1.5">
-              MUSICX STUDIO <span className="text-[10px] px-1.5 py-0.2 bg-fl-accent/20 text-fl-accent rounded border border-fl-accent/30 font-mono">v2.0 PRO</span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-sm font-bold tracking-wider text-white">
+              MUSICX STUDIO
             </span>
-            <span className="text-[10px] text-gray-400 font-mono tracking-tight">{t.brandSubtitle}</span>
+            <span className="text-[10px] px-1.5 py-0.2 bg-fl-accent/20 text-fl-accent rounded border border-fl-accent/30 font-mono font-bold">
+              v2.0 PRO
+            </span>
           </div>
         </div>
 

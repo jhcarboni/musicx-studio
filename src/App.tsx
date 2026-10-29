@@ -7,7 +7,7 @@ import { PlaylistArranger } from './components/playlist/PlaylistArranger';
 import { useProjectStore } from './store/useProjectStore';
 import { useLanguageStore } from './store/useLanguageStore';
 import { audioEngine } from './audio/AudioEngine';
-import { Activity, CheckCircle2, Keyboard } from 'lucide-react';
+import { Keyboard } from 'lucide-react';
 
 export default function App() {
   const { isPlaying, playMode, setPlayMode, activeWindow, setActiveWindow } = useProjectStore();
@@ -46,15 +46,6 @@ export default function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isPlaying, playMode, setPlayMode, setActiveWindow]);
 
-  const waves = [
-    { id: 0, title: t.wave0Title, desc: t.wave0Desc, done: true },
-    { id: 1, title: t.wave1Title, desc: t.wave1Desc, done: true },
-    { id: 2, title: t.wave2Title, desc: t.wave2Desc, done: true },
-    { id: 3, title: t.wave3Title, desc: t.wave3Desc, done: true },
-    { id: 4, title: t.wave4Title, desc: t.wave4Desc, done: true },
-    { id: 5, title: t.wave5Title, desc: t.wave5Desc, done: true },
-  ];
-
   return (
     <div className="min-h-screen bg-fl-bg text-gray-200 flex flex-col font-sans selection:bg-fl-accent selection:text-white">
       {/* Top FL Studio Toolbar */}
@@ -67,52 +58,6 @@ export default function App() {
         {activeWindow === 'pianoroll' && <PianoRoll />}
         {activeWindow === 'mixer' && <Mixer />}
         {activeWindow === 'playlist' && <PlaylistArranger />}
-
-        {/* Waves Roadmap Tracker (All 6 Waves Complete) */}
-        <div className="bg-fl-panel border border-fl-border rounded-xl p-5 shadow-lg">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-bold uppercase tracking-wider text-white flex items-center gap-2">
-              <Activity className="w-4 h-4 text-fl-green" />
-              {t.modernizationComplete}
-            </h2>
-            <div className="flex items-center gap-2 text-xs font-mono text-fl-green bg-fl-green/10 px-2.5 py-1 rounded border border-fl-green/30">
-              <CheckCircle2 className="w-4 h-4" /> {t.dawModernizedSuccess}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {waves.map((wave) => (
-              <div
-                key={wave.id}
-                className="p-3.5 rounded-lg border bg-fl-surface/80 border-fl-green/50 shadow-sm transition-all"
-              >
-                <div className="flex items-start justify-between mb-1.5">
-                  <span className="text-xs font-mono font-bold text-fl-green">
-                    {wave.id === 0 ? 'ONDA 0' : `ONDA ${wave.id}`}
-                  </span>
-                  <span className="flex items-center gap-1 text-[11px] text-fl-green font-semibold bg-fl-green/10 px-2 py-0.5 rounded border border-fl-green/30">
-                    <CheckCircle2 className="w-3.5 h-3.5" /> {t.completedBadge}
-                  </span>
-                </div>
-                <h3 className="text-sm font-semibold text-white mb-0.5">{wave.title}</h3>
-                <p className="text-xs text-gray-400 leading-relaxed">{wave.desc}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* Quick Keyboard Shortcuts Guide */}
-          <div className="mt-4 pt-3 border-t border-fl-border/40 flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono text-gray-400">
-            <div className="flex items-center gap-2">
-              <Keyboard className="w-3.5 h-3.5 text-fl-accent" />
-              <span>{t.shortcuts}:</span>
-              <kbd className="px-1.5 py-0.5 bg-fl-surface border border-fl-border rounded text-gray-300">Espaço</kbd> {t.spaceShortcut}
-              <kbd className="px-1.5 py-0.5 bg-fl-surface border border-fl-border rounded text-gray-300">Enter</kbd> {t.enterShortcut}
-              <kbd className="px-1.5 py-0.5 bg-fl-surface border border-fl-border rounded text-gray-300">L</kbd> {t.lShortcut}
-              <kbd className="px-1.5 py-0.5 bg-fl-surface border border-fl-border rounded text-gray-300">1-4</kbd> {t.numbersShortcut}
-            </div>
-            <span className="text-fl-accent font-semibold">Web FL Studio DAW Pro</span>
-          </div>
-        </div>
       </main>
 
       {/* Footer Status Bar */}
@@ -125,6 +70,17 @@ export default function App() {
           <span>{t.sampleRate}: 44.1 kHz</span>
           <span>{t.bufferSize}</span>
         </div>
+
+        {/* Quick Keyboard Shortcuts in Footer */}
+        <div className="hidden lg:flex items-center gap-2 text-[10px] text-gray-400">
+          <Keyboard className="w-3 h-3 text-fl-accent" />
+          <span>{t.shortcuts}:</span>
+          <kbd className="px-1 py-0.2 bg-fl-surface border border-fl-border rounded text-gray-300">Espaço</kbd> {t.spaceShortcut}
+          <kbd className="px-1 py-0.2 bg-fl-surface border border-fl-border rounded text-gray-300">Enter</kbd> {t.enterShortcut}
+          <kbd className="px-1 py-0.2 bg-fl-surface border border-fl-border rounded text-gray-300">L</kbd> {t.lShortcut}
+          <kbd className="px-1 py-0.2 bg-fl-surface border border-fl-border rounded text-gray-300">1-4</kbd> {t.numbersShortcut}
+        </div>
+
         <div className="flex items-center gap-2">
           <span>{t.branch}: <span className="text-fl-accent font-bold">main</span></span>
         </div>

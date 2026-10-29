@@ -17,9 +17,9 @@
 ```mermaid
 graph TD
     subgraph UI ["React 18 + Tailwind CSS Layer"]
-        TopBar["TopToolbar (Transport, BPM, PAT/SONG)"]
+        TopBar["TopToolbar (Transport, BPM, PAT/SONG, i18n)"]
         Rack["ChannelRack (16 Steps, Drag & Drop)"]
-        PR["PianoRoll (C3-B4 Grid, Velocity Editor)"]
+        PR["PianoRoll (C3-B4 Grid, Velocity)"]
         MixerUI["Mixer (5 Strips, 3-Band EQ, FX Sends)"]
         PlaylistUI["PlaylistArranger (16 Bars Timeline, Clips)"]
     end
@@ -27,6 +27,7 @@ graph TD
     subgraph State ["Global State (Zustand Stores)"]
         useProjectStore["useProjectStore (BPM, Swing, Patterns, Clips)"]
         useMixerStore["useMixerStore (Volumes, Pans, EQs, Sends)"]
+        useLanguageStore["useLanguageStore (pt-BR / en, localStorage)"]
     end
 
     subgraph Engine ["Decoupled DSP Engine (Web Audio API)"]
@@ -47,23 +48,23 @@ graph TD
 ## ✨ Features
 
 ### 1. 🎛️ Channel Rack & Step Sequencer
-- **16-Step Grid**: Classic 4/4 rhythm grouping with alternating beat block colors.
-- **Tactile Rotary Knobs (`<RotaryKnob />`)**: Smooth vertical dragging with pointer capture, fine sensitivity, and double-click to reset.
+- **16-Step Grid**: Classic 4/4 rhythm grouping with alternating beat block colors (`fl-step-off-a` and `fl-step-off-b`).
+- **Tactile Rotary Knobs (`<RotaryKnob />`)**: Smooth vertical dragging with pointer capture, fine sensitivity, bipolar support (Pan), and double-click to reset.
 - **Audio Sample Drag & Drop**: Drag `.wav` or `.mp3` audio files directly from your desktop onto any channel row to decode and play them instantly.
 - **Swing / Groove Control**: Global shuffle timing slider (0% to 100%) dynamically adjusting odd 16th-note timings.
 
 ### 2. 🎚️ Dedicated Mixer & DSP Effects Rack
 - **5 Audio Channels**: Dedicated **Master (MST)** strip with safety Master Limiter (-0.5 dB) + 4 independent insert tracks (`Kick`, `Snare`, `HiHat`, `Clap`).
-- **3-Band Equalizer**: Individual `HI`, `MID`, and `LOW` shelf/peaking filters (-12 dB to +12 dB) per track.
-- **Auxiliary FX Sends**: Dedicated send knobs for **Reverb** (convolver impulse), **Stereo Delay** (feedback), and **Fast Distortion** (analog wave shaper).
+- **3-Band Equalizer**: Individual `HI` (highshelf 4500 Hz), `MID` (peaking 1200 Hz), and `LOW` (lowshelf 250 Hz) filters (-12 dB to +12 dB) per track.
+- **Auxiliary FX Sends**: Dedicated send knobs for **Reverb** (convolver impulse), **Stereo Delay** (feedback delay), and **Fast Distortion** (analog wave shaper with sigmoid curve).
 - **Decibel-Calibrated Vertical Faders**: High-precision faders with numerical dB readouts (`0.0 dB`, `-6.0 dB`, `-inf`) and animated stereo VU peak meters.
 - **60 FPS Real-Time Canvas Visualizer**: Toggle instantly between **Spectrum Analyzer (48-band FFT)** and **Oscilloscope (Stereo Waveform)**.
 
 ### 3. 🎹 Melodic Piano Roll & Velocity Graph
-- **2-Octave Chromatic Grid (C3 to B4, 24 Semitones)**: Click to place or delete melodic notes.
+- **2-Octave Chromatic Grid (C3 to B4, 24 Semitones)**: Click to place or delete melodic notes with dedicated polyphonic synthesis.
 - **Interactive Vertical Keyboard**: Clickable black and white keys with audio preview and root key indicators (*Root C*).
 - **Note Duration Selector**: Support for 1/16, 1/8, or 1/4 bar note lengths.
-- **Per-Step Velocity Graph Editor**: Bottom drawer with 16 vertical dynamic bars to tweak velocity per step.
+- **Per-Step Velocity Graph Editor**: Bottom drawer with 16 vertical dynamic bars to tweak velocity per step (5% to 100%).
 
 ### 4. 🎵 Playlist Arranger & Offline WAV Export
 - **16-Bar Multi-Track Timeline**: 4 horizontal tracks to arrange and sequence pattern clips.
@@ -71,6 +72,26 @@ graph TD
 - **Dual Playback Modes (`[PAT]` / `[SONG]`)**: Loop the active pattern or play the entire song arrangement with a timeline playhead ruler.
 - **Demo Song Preset**: 1-click button to load a full demonstration track with Intro, Drop, and Outro sections.
 - **Master WAV Export**: High-speed offline rendering via `OfflineAudioContext` for 16-bit stereo PCM WAV (44.1 kHz) instant downloads.
+
+### 5. 🌐 Multilingual Support (i18n)
+- **Brazilian Portuguese (`pt-BR`) by default**: Full Portuguese musical terminology.
+- **English (`en`) selectable**: Instant toggle button **`[🌐 PT | EN]`** on the top toolbar translating the entire interface in real-time.
+- **Automatic Persistence**: Language preference saved to `localStorage` (`musicx_lang`).
+
+---
+
+## 🔬 DSP Synthesis Architecture
+
+All native sounds are generated mathematically in real time:
+
+| Instrument | Channel | Synthesis Method | Technical Details |
+| :--- | :--- | :--- | :--- |
+| **Kick 808** | In 1 | Sine Wave + Exponential Pitch Modulation | Frequency drop from 150 Hz $\to$ 32 Hz in 120ms with 350ms exponential decay. |
+| **Snare Hard** | In 2 | Triangle Wave + Filtered White Noise | Triangle body (180 Hz $\to$ 45 Hz) layered with high-pass filtered noise burst (1000 Hz). |
+| **HiHat Clsd** | In 3 | 6 Square Oscillators + Bandpass/Highpass Filters | Classic 808 metallic ratios routed through band-pass (10 kHz) and high-pass (7.5 kHz). |
+| **Clap 909** | In 4 | White Noise Micro-Bursts + Bandpass Filter | 3 consecutive bursts spaced by ~11ms followed by a decay tail centered at 1200 Hz ($Q=2$). |
+| **Melodic Synth**| Dynamic | Sawtooth Wave + Polyphonic ADSR Envelope | Subtractive synthesis tuned via standard MIDI pitch formula ($f = 440 \times 2^{(midi-69)/12}$). |
+| **Custom Audio** | Any | Native `AudioBufferSourceNode` | Decoded on the fly via `AudioContext.decodeAudioData()`. |
 
 ---
 
@@ -80,7 +101,7 @@ graph TD
 | :--- | :--- |
 | <kbd>Space</kbd> | Toggle Play / Pause |
 | <kbd>Enter</kbd> | Stop playback and reset playhead to start |
-| <kbd>L</kbd> | Toggle between `PAT` (Pattern) and `SONG` modes |
+| <kbd>L</kbd> | Toggle between `PAT` (Pattern) and `SONG` (Playlist) modes |
 | <kbd>1</kbd> | Open **Channel Rack** |
 | <kbd>2</kbd> | Open **Piano Roll** |
 | <kbd>3</kbd> | Open **Mixer** |
@@ -92,6 +113,8 @@ graph TD
 
 ```
 musicx-studio/
+├── .devcontainer/
+│   └── devcontainer.json      # GitHub Codespaces config (Public port 3000 forwarding)
 ├── src/
 │   ├── audio/
 │   │   ├── AudioEngine.ts     # Decoupled Web Audio singleton, DSP synths & scheduler
@@ -101,23 +124,28 @@ musicx-studio/
 │   │   ├── mixer/             # Mixer rack, MixerStrip, AudioVisualizer Canvas
 │   │   ├── pianoroll/         # PianoRoll chromatic matrix, VelocityGraph
 │   │   ├── playlist/          # PlaylistArranger multi-track timeline
-│   │   ├── rack/              # ChannelRack, ChannelRow (Drag & Drop zone)
-│   │   └── toolbar/           # TopToolbar (Transport, LCD BPM, Window Toggles)
+│   │   ├── rack/              # ChannelRack, ChannelRow (Drag & Drop sample zone)
+│   │   └── toolbar/           # TopToolbar (Transport, LCD BPM, Language Switcher)
+│   ├── i18n/
+│   │   └── translations.ts    # Complete pt-BR and en dictionaries
 │   ├── store/
+│   │   ├── useLanguageStore.ts# Zustand store with localStorage persistence
 │   │   ├── useMixerStore.ts   # Zustand store for strips, faders, EQs and FX sends
 │   │   └── useProjectStore.ts # Zustand store for BPM, swing, channels, patterns, clips
 │   ├── types/
 │   │   └── index.ts           # TypeScript interfaces and domain models
 │   ├── App.tsx                # Main application layout and window manager
 │   ├── index.css              # Tailwind CSS directives & FL Studio dark scrollbars
-│   └── main.tsx               # React 18 DOM mount entry point
+│   ├── main.tsx               # React 18 DOM mount entry point
+│   └── vite-env.d.ts          # Vite environment types
 ├── legacy/                    # Intact backup of original vanilla HTML/CSS/JS version
 ├── vite.config.ts             # Vite 6 configuration (host: true, allowedHosts: true)
 ├── tailwind.config.js         # FL Studio dark theme palette and grid definitions
 ├── tsconfig.json              # TypeScript compiler configuration
 ├── start.bat                  # 1-Click launcher for Windows
 ├── package.json               # Dependencies and build scripts
-└── README.md                  # Portuguese documentation
+├── README.md                  # Portuguese documentation
+└── README.en.md               # English documentation
 ```
 
 ---
@@ -149,11 +177,12 @@ npm run legacy
 
 This repository includes a configured `.devcontainer/devcontainer.json`:
 1. On GitHub, click **Code** > **Codespaces** > **Create codespace on main**.
-2. Run in the Codespace terminal:
+2. In the Codespace terminal, run:
    ```bash
    npm run dev
    ```
-3. Open port **3000** (`https://<codespace-name>-3000.app.github.dev/`). Ensure port visibility is set to **Public** if opening from an external tab.
+3. Open port **3000** (`https://<codespace-name>-3000.app.github.dev/`).
+4. *Tip*: If opening from an external tab results in a 401 error, click the **PORTS** tab in VS Code, right-click on port 3000, and change **Port Visibility** to **Public**.
 
 ---
 
@@ -164,7 +193,7 @@ This repository includes a configured `.devcontainer/devcontainer.json`:
 - **TypeScript 5.7**: Strict type safety across audio nodes, patterns, and channels.
 - **Zustand 5**: Ultra-performant atomic state management preventing unnecessary React re-renders.
 - **Web Audio API**: Native digital signal processing (DSP), synthesis, biquad filters, convolvers, and FFT analyzers.
-- **Vite 6**: Next-generation frontend tooling and instant HMR.
+- **Vite 6**: Next-generation frontend tooling and instant HMR with Docker/Codespaces support.
 - **Lucide React**: Clean vector iconography for audio controls.
 
 ---

@@ -108,8 +108,9 @@ graph LR
 musicx-studio/
 ├── .devcontainer/
 │   └── devcontainer.json   # Configuração para GitHub Codespaces (Live Server e portas)
-├── index.html              # Interface e motor de áudio Web Audio API
+├── index.html              # Interface e marcação da aplicação
 ├── style.css               # Folha de estilos modular (estética FL Studio)
+├── app.js                  # Lógica do sequenciador, DSP e motor de áudio Web Audio API
 ├── server.js               # Servidor local nativo zero-dependência (Node.js)
 ├── start.bat               # Inicializador de 1 clique para Windows
 ├── package.json            # Scripts de inicialização

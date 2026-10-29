@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MusicX Studio — Web FL Studio DAW</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- TOP TOOLBAR -->
+<div class="fl-toolbar">
+  <div class="toolbar-left">
+    <div class="app-logo">
+      <span>🎛️</span> MUSICX STUDIO
+    </div>
+
+    <!-- PAT / SONG MODE TOGGLE -->
+    <div class="mode-toggle" title="Alternar entre tocar o Pattern atual ou a Música completa (Playlist)">
+      <button id="modePatBtn" class="mode-btn active">PAT</button>
+      <button id="modeSongBtn" class="mode-btn">SONG</button>
+    </div>
+
+    <button id="btnPlay" class="transport-btn play">▶ PLAY</button>
+    <button id="btnStop" class="transport-btn">■ STOP</button>
+    
+    <div class="lcd-display" title="Clique para digitar o BPM">
+      <span class="lcd-label">BPM</span>
+      <input type="number" id="bpmInput" class="lcd-input" min="40" max="240" value="130">
+    </div>
+    <input type="range" id="bpmSlider" min="40" max="240" value="130" style="width: 85px;">
+
+    <div class="lcd-display">
+      <span class="lcd-label">STEP</span>
+      <span id="stepCounterDisplay">--</span>
+    </div>
+
+    <!-- PATTERN SELECTOR -->
+    <div class="pattern-selector-wrap" title="Seletor de Padrões">
+      <button id="prevPatBtn" class="pat-nav-btn" title="Padrão Anterior">&lt;</button>
+      <span id="patDisplayName" class="pat-display-name">Pattern 1</span>
+      <button id="nextPatBtn" class="pat-nav-btn" title="Próximo Padrão">&gt;</button>
+      <button id="addPatBtn" class="pat-add-btn" title="Criar Novo Padrão">+</button>
+    </div>
+  </div>
+
+  <div class="toolbar-right">
+    <button id="exportWavBtn" class="export-btn" title="Exportar áudio renderizado em arquivo WAV estéreo">
+      ⬇️ Export WAV
+    </button>
+    <div class="view-toggles">
+      <button id="toggleRackBtn" class="view-btn active">🎹 Rack</button>
+      <button id="togglePrBtn" class="view-btn active">🎹 Piano Roll</button>
+      <button id="togglePlaylistBtn" class="view-btn active">🎵 Playlist</button>
+      <button id="toggleMixerBtn" class="view-btn active">🎛️ Mixer & FX</button>
+    </div>
+  </div>
+</div>
+
+<!-- CHANNEL RACK -->
+<div id="channelRackWindow" class="channel-rack">
+  <div class="rack-header">
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <span class="rack-title">🎹 Channel Rack &bull; Pattern 1</span>
+      <span style="color: #666; font-size: 11px;">16 Steps (4/4)</span>
+    </div>
+    <div class="rack-header-controls">
+      <div class="swing-control-wrap" title="Global Swing / Shuffle (Groove nos tempos pares)">
+        <span class="swing-label">SWING</span>
+        <input type="range" id="swingSlider" class="swing-slider" min="0" max="100" value="0">
+        <span id="swingVal" class="swing-val">0%</span>
+      </div>
+      <button id="toggleGraphEditorBtn" class="graph-editor-btn" title="Alternar Graph Editor de Velocidade por Passo">
+        📊 Velocity
+      </button>
+    </div>
+  </div>
+  <div id="channelsContainer"></div>
+</div>
+
+<!-- PIANO ROLL WINDOW -->
+<div id="pianoRollWindow" class="piano-roll-panel">
+  <div class="pr-header">
+    <div class="pr-title-group">
+      <span class="pr-title">🎹 FL Piano Roll</span>
+      <div class="pr-target-select-wrap">
+        <span class="pr-target-label">Target:</span>
+        <select id="prTargetSelect" class="pr-select">
+          <option value="bass" selected>303 Bass</option>
+          <option value="kick">Kick 808</option>
+          <option value="snare">Snare Hard</option>
+          <option value="hat">Hat Closed</option>
+          <option value="clap">Clap 90s</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="pr-tools">
+      <button id="prOctaveDownBtn" class="pr-tool-btn" title="Descer 1 oitava">- Octave</button>
+      <button id="prOctaveUpBtn" class="pr-tool-btn" title="Subir 1 oitava">+ Octave</button>
+      <button id="prPresetAcidBtn" class="pr-tool-btn" title="Carregar linha de baixo Acid">⚡ Acid Riff</button>
+      <button id="prClearBtn" class="pr-tool-btn danger" title="Limpar notas">Clear</button>
+      <button id="prCloseBtn" class="pr-tool-btn" title="Fechar Piano Roll">&times;</button>
+    </div>
+  </div>
+
+  <div class="pr-timeline-ruler">
+    <div class="pr-ruler-corner">KEY</div>
+    <div class="pr-ruler-steps" id="prRulerSteps"></div>
+  </div>
+
+  <div class="pr-workspace-scroll" id="prWorkspaceScroll">
+    <div class="pr-keyboard" id="prKeyboard"></div>
+    <div class="pr-grid-container" id="prGridContainer">
+      <div id="prPlayhead" class="pr-playhead"></div>
+    </div>
+  </div>
+
+  <div class="pr-footer">
+    <span id="prNoteInfo">Clique em uma célula para adicionar ou remover notas. Clique nas teclas de piano à esquerda para pré-escutar o tom.</span>
+    <span class="pr-scale-info">Range: C2 a C4 (24 Semitons) &bull; 16 Steps</span>
+  </div>
+</div>
+
+<!-- PLAYLIST ARRANGER WINDOW -->
+<div id="playlistWindow" class="playlist-panel">
+  <div class="playlist-header">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <span class="playlist-title">🎵 FL Playlist &bull; Song Arranger</span>
+      <span style="color: #666; font-size: 11px;">16 Compassos (Bars) &bull; 4 Pistas Multi-Track</span>
+    </div>
+    <div class="playlist-tools">
+      <span style="font-size: 10px; color: #888;">Pintar na Timeline:</span>
+      <span id="playlistCurrentBrushPat" style="font-size: 10px; font-weight: bold; color: #ff8533;">Pattern 1</span>
+      <button id="btnClearPlaylistBtn" class="pr-tool-btn danger" style="padding: 2px 6px; font-size: 10px;" title="Limpar blocos da Playlist">Limpar Timeline</button>
+      <button id="btnDemoSongBtn" class="pr-tool-btn" style="padding: 2px 6px; font-size: 10px;" title="Carregar arranjo demo da música">⚡ Demo Song</button>
+    </div>
+  </div>
+
+  <div class="playlist-timeline-ruler">
+    <div class="playlist-ruler-corner">TRACK</div>
+    <div class="playlist-ruler-bars" id="playlistRulerBars"></div>
+  </div>
+
+  <div class="playlist-body" id="playlistBody">
+    <div id="playlistPlayhead" class="playlist-playhead"></div>
+    <div id="playlistTracksContainer"></div>
+  </div>
+</div>
+
+<!-- MIXER & FX PANEL -->
+<div id="mixerWindow" class="mixer-panel">
+  <div class="mixer-header">
+    <span class="mixer-title">🎛️ FL Mixer &bull; 6 Inserts & Master FX Chain</span>
+    <span style="color: #666; font-size: 11px;">Hardware-grade DSP &bull; Analyser VU Meters</span>
+  </div>
+
+  <div class="mixer-body">
+    <!-- Channel Strips (Master + 5 Channels) -->
+    <div class="mixer-strips-container" id="mixerStripsContainer"></div>
+
+    <!-- Master FX Rack -->
+    <div class="mixer-fx-rack">
+      <div class="fx-rack-header">
+        <span>Master Insert FX Rack</span>
+        <span style="font-size: 9px; color: #888;">SLOTS 1-4</span>
+      </div>
+
+      <!-- Slot 1: Fruity Delay -->
+      <div class="fx-slot" id="slotDelay">
+        <div class="fx-slot-titlebar">
+          <span class="fx-slot-name">⏱️ Fruity Delay 3</span>
+          <div class="fx-toggle" id="fxDelayToggle" title="Ligar/Desligar Delay"></div>
+        </div>
+        <div class="fx-controls-row">
+          <div class="fx-param">
+            <span>Time</span>
+            <input type="range" id="delayTimeSlider" class="fx-param-slider" min="0.05" max="0.6" step="0.01" value="0.23">
+            <span id="delayTimeVal" class="fx-val">230ms</span>
+          </div>
+          <div class="fx-param">
+            <span>Feedback</span>
+            <input type="range" id="delayFeedbackSlider" class="fx-param-slider" min="0" max="0.8" step="0.05" value="0.45">
+            <span id="delayFeedbackVal" class="fx-val">45%</span>
+          </div>
+          <div class="fx-param">
+            <span>Mix</span>
+            <input type="range" id="delayMixSlider" class="fx-param-slider" min="0" max="1" step="0.05" value="0.35">
+            <span id="delayMixVal" class="fx-val">35%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slot 2: Fruity Reeverb -->
+      <div class="fx-slot" id="slotReverb">
+        <div class="fx-slot-titlebar">
+          <span class="fx-slot-name">🌌 Fruity Reeverb 2</span>
+          <div class="fx-toggle" id="fxReverbToggle" title="Ligar/Desligar Reverb"></div>
+        </div>
+        <div class="fx-controls-row">
+          <div class="fx-param">
+            <span>Decay</span>
+            <input type="range" id="reverbDecaySlider" class="fx-param-slider" min="0.5" max="3.5" step="0.1" value="1.8">
+            <span id="reverbDecayVal" class="fx-val">1.8s</span>
+          </div>
+          <div class="fx-param">
+            <span>Mix</span>
+            <input type="range" id="reverbMixSlider" class="fx-param-slider" min="0" max="1" step="0.05" value="0.30">
+            <span id="reverbMixVal" class="fx-val">30%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slot 3: Overdrive Dist -->
+      <div class="fx-slot" id="slotDist">
+        <div class="fx-slot-titlebar">
+          <span class="fx-slot-name">⚡ Fast Distortion</span>
+          <div class="fx-toggle" id="fxDistToggle" title="Ligar/Desligar Distorção"></div>
+        </div>
+        <div class="fx-controls-row">
+          <div class="fx-param">
+            <span>Drive</span>
+            <input type="range" id="distDriveSlider" class="fx-param-slider" min="0" max="60" step="2" value="25">
+            <span id="distDriveVal" class="fx-val">25</span>
+          </div>
+          <div class="fx-param">
+            <span>Mix</span>
+            <input type="range" id="distMixSlider" class="fx-param-slider" min="0" max="1" step="0.05" value="0.40">
+            <span id="distMixVal" class="fx-val">40%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slot 4: DJ Filter -->
+      <div class="fx-slot" id="slotFilter">
+        <div class="fx-slot-titlebar">
+          <span class="fx-slot-name">🎚️ Master DJ Filter</span>
+          <div class="fx-toggle" id="fxFilterToggle" title="Ligar/Desligar Filtro"></div>
+        </div>
+        <div class="fx-controls-row">
+          <div class="fx-param">
+            <span>Type</span>
+            <select id="filterTypeSelect" style="background:#090a0d; color:#fff; border:1px solid #333; font-size:10px; border-radius:2px; padding:1px 4px;">
+              <option value="lowpass">Lowpass</option>
+              <option value="highpass">Highpass</option>
+            </select>
+          </div>
+          <div class="fx-param">
+            <span>Cutoff</span>
+            <input type="range" id="filterCutoffSlider" class="fx-param-slider" min="200" max="12000" step="100" value="3500">
+            <span id="filterCutoffVal" class="fx-val">3.5k</span>
+          </div>
+          <div class="fx-param">
+            <span>Res (Q)</span>
+            <input type="range" id="filterQSlider" class="fx-param-slider" min="0.5" max="8" step="0.5" value="2.5">
+            <span id="filterQVal" class="fx-val">2.5</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,27 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-fl-bg text-gray-200 antialiased;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  /* Custom FL Studio Dark Scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #121317;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #363a4a;
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #ff851b;
+  }
+}

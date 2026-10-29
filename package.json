@@ -1,9 +1,9 @@
 {
   "name": "musicx-studio",
   "version": "1.0.0",
-  "description": "MusicX Studio - Web FL Studio Channel Rack",
+  "description": "MusicX Studio — Web FL Studio DAW",
   "scripts": {
-    "dev": "npx -y serve . -l 3000",
-    "start": "npx -y serve . -l 3000"
+    "dev": "node server.js",
+    "start": "node server.js"
   }
 }

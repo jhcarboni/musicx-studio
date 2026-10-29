@@ -110,25 +110,28 @@ musicx-studio/
 │   └── devcontainer.json   # Configuração para GitHub Codespaces (Live Server e portas)
 ├── index.html              # Interface e motor de áudio Web Audio API
 ├── style.css               # Folha de estilos modular (estética FL Studio)
-├── package.json            # Scripts de desenvolvimento rápido
+├── server.js               # Servidor local nativo zero-dependência (Node.js)
+├── start.bat               # Inicializador de 1 clique para Windows
+├── package.json            # Scripts de inicialização
 └── README.md               # Documentação do projeto
 ```
 
 ---
 
-## 🚀 Como Executar
+## 🚀 Como Executar Localmente no seu Computador
 
-### 1. Diretamente no Navegador (Sem instalar nada)
-Basta abrir o arquivo `index.html` em qualquer navegador moderno (Chrome, Edge, Firefox, Safari, Brave).
-
-### 2. Com Servidor Local (Node.js)
-Se você tiver o Node.js instalado:
-```bash
-npm run dev
-# ou
-npx serve .
+### Opção 1: Executar com Node.js (Recomendado)
+No terminal do projeto, execute:
+```powershell
+node server.js
 ```
-Acesse em: `http://localhost:3000`
+*(O navegador abrirá automaticamente em `http://localhost:3000`)*.
+
+### Opção 2: Pelo arquivo `start.bat` (1 Clique no Windows)
+Basta dar **dois cliques** no arquivo `start.bat` na pasta do projeto no Windows Explorer!
+
+### Opção 3: Abrir direto no Navegador
+Dê dois cliques no arquivo `index.html` para abrir diretamente no Chrome, Edge, Brave ou Firefox.
 
 ### 3. No GitHub Codespaces (Na Nuvem)
 Este repositório já conta com **Dev Containers** configurados:

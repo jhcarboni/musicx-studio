@@ -1,6 +1,7 @@
 import React from 'react';
 import { useProjectStore } from '../../store/useProjectStore';
-import { Layers, Sparkles, Trash2, Info } from 'lucide-react';
+import { useLanguageStore } from '../../store/useLanguageStore';
+import { Layers, Sparkles, Info } from 'lucide-react';
 
 export const PlaylistArranger: React.FC = () => {
   const {
@@ -8,8 +9,9 @@ export const PlaylistArranger: React.FC = () => {
     isPlaying, playMode, currentBar, setPlayMode, loadDemoSong
   } = useProjectStore();
 
+  const { t } = useLanguageStore();
   const currentPattern = patterns.find(p => p.id === activePatternId);
-  const trackNames = ['Track 1 (Drums)', 'Track 2 (Snare / FX)', 'Track 3 (Hats)', 'Track 4 (Melody / Clap)'];
+  const trackNames = [t.trackDrums, t.trackSnare, t.trackHats, t.trackMelody];
 
   return (
     <div className="bg-fl-panel border border-fl-border rounded-xl shadow-2xl overflow-hidden flex flex-col select-none">
@@ -18,18 +20,18 @@ export const PlaylistArranger: React.FC = () => {
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-white">
             <Layers className="w-4 h-4 text-fl-accent" />
-            <span>Playlist / Arranjador Timeline</span>
+            <span>{t.playlistTitle}</span>
           </div>
 
           {/* Active Pattern Clip Indicator */}
           <div className="flex items-center gap-2 bg-fl-bg px-2.5 py-1 rounded border border-fl-border text-xs">
-            <span className="text-gray-400 text-[11px]">Pincel Ativo:</span>
+            <span className="text-gray-400 text-[11px]">{t.activeBrush}:</span>
             <div className="flex items-center gap-1.5 font-mono font-bold text-white">
               <span 
                 className="w-2.5 h-2.5 rounded-full" 
                 style={{ backgroundColor: currentPattern?.color || '#ff851b' }} 
               />
-              <span className="text-fl-accent">{currentPattern?.name || `Pattern ${activePatternId}`}</span>
+              <span className="text-fl-accent">{currentPattern?.name || `${t.pattern} ${activePatternId}`}</span>
             </div>
           </div>
         </div>
@@ -42,16 +44,16 @@ export const PlaylistArranger: React.FC = () => {
               setPlayMode('SONG');
             }}
             className="flex items-center gap-1.5 px-3 py-1 rounded bg-fl-bg hover:bg-fl-border text-fl-green border border-fl-border font-semibold transition-all"
-            title="Carregar arranjo demo completo de 16 compassos"
+            title={t.loadDemoSong}
           >
-            <Sparkles className="w-3.5 h-3.5" /> Carregar Demo Song
+            <Sparkles className="w-3.5 h-3.5" /> {t.loadDemoSong}
           </button>
         </div>
       </div>
 
       {/* Timeline Bar Ruler (1 to 16 Bars) */}
       <div className="flex items-center bg-fl-surface/60 border-b border-fl-border px-3 py-1.5 text-[11px] font-mono text-gray-400 relative">
-        <div className="w-44 shrink-0 font-bold pl-1">PISTA</div>
+        <div className="w-44 shrink-0 font-bold pl-1">{t.track}</div>
         <div className="flex-1 grid grid-cols-16 gap-1 text-center relative">
           {Array.from({ length: 16 }).map((_, barIdx) => {
             const isCurrentBar = isPlaying && playMode === 'SONG' && currentBar === barIdx;
@@ -102,11 +104,11 @@ export const PlaylistArranger: React.FC = () => {
                           : 'bg-fl-surface/30 border-fl-border/20 hover:bg-fl-surface/80 hover:border-gray-400'
                     } ${isCurrentBar ? 'ring-2 ring-fl-lcd ring-offset-1 ring-offset-fl-bg' : ''}`}
                     style={clip ? { backgroundColor: clip.color || '#ff851b' } : {}}
-                    title={clip ? `Remover ${pattern?.name || 'Clip'} no Compasso ${barIdx + 1}` : `Adicionar no Compasso ${barIdx + 1}`}
+                    title={clip ? `${t.removeClip} ${barIdx + 1}` : `${t.addClip} ${barIdx + 1}`}
                   >
                     {clip && (
                       <span className="truncate px-1 drop-shadow font-mono text-[9px]">
-                        {pattern?.name || `Pat ${clip.patternId}`}
+                        {pattern?.name || `${t.pattern} ${clip.patternId}`}
                       </span>
                     )}
                   </div>
@@ -121,9 +123,9 @@ export const PlaylistArranger: React.FC = () => {
       <div className="bg-fl-surface/50 px-4 py-2 border-t border-fl-border/40 flex items-center justify-between text-[11px] text-gray-400 font-mono">
         <div className="flex items-center gap-1.5">
           <Info className="w-3.5 h-3.5 text-fl-accent" />
-          <span>Clique em qualquer compasso vazio para pintar o clipe do pattern selecionado. Clique no clipe para remover.</span>
+          <span>{t.playlistTip}</span>
         </div>
-        <span className="text-gray-400">Total: 16 Compassos</span>
+        <span className="text-gray-400">{t.totalBars}</span>
       </div>
     </div>
   );

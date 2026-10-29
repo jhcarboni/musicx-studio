@@ -1,11 +1,13 @@
 import React from 'react';
 import { useMixerStore } from '../../store/useMixerStore';
+import { useLanguageStore } from '../../store/useLanguageStore';
 import { MixerStrip } from './MixerStrip';
 import { AudioVisualizer } from './AudioVisualizer';
 import { Sliders, Volume2, ShieldCheck } from 'lucide-react';
 
 export const Mixer: React.FC = () => {
   const { tracks } = useMixerStore();
+  const { t } = useLanguageStore();
 
   const masterTrack = tracks.find(t => t.id === 0);
   const insertTracks = tracks.filter(t => t.id !== 0);
@@ -17,17 +19,17 @@ export const Mixer: React.FC = () => {
         <div className="flex items-center gap-2">
           <Sliders className="w-4 h-4 text-fl-accent" />
           <h2 className="text-xs font-bold uppercase tracking-wider text-white">
-            Mixer & Processador DSP — Canais Independentes
+            {t.mixerTitle}
           </h2>
         </div>
 
         <div className="flex items-center gap-3 text-xs font-mono">
           <span className="flex items-center gap-1 text-fl-green">
             <ShieldCheck className="w-3.5 h-3.5" />
-            Master Limiter Ativo (-0.5 dB)
+            {t.masterLimiterActive}
           </span>
           <span className="text-gray-400">
-            Saída: <strong>44.1 kHz Estéreo</strong>
+            {t.stereoOutput}
           </span>
         </div>
       </div>
@@ -56,9 +58,9 @@ export const Mixer: React.FC = () => {
       <div className="pt-2 border-t border-fl-border/40 flex items-center justify-between text-[11px] font-mono text-gray-400">
         <div className="flex items-center gap-1.5">
           <Volume2 className="w-3.5 h-3.5 text-fl-accent" />
-          <span>Cada canal possui EQ de 3 bandas, fader calibrado em dB e barramentos de Reverb, Delay e Distorção.</span>
+          <span>{t.mixerTip}</span>
         </div>
-        <span className="text-gray-400">Roteamento: 100% Nativo Web Audio</span>
+        <span className="text-gray-400">{t.routingInfo}</span>
       </div>
     </div>
   );

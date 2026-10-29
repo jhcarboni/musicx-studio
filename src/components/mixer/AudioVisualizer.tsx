@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { audioEngine } from '../../audio/AudioEngine';
+import { useLanguageStore } from '../../store/useLanguageStore';
 import { Activity, Radio } from 'lucide-react';
 
 interface AudioVisualizerProps {
@@ -10,6 +11,7 @@ export const AudioVisualizer: React.FC<AudioVisualizerProps> = ({ height = 120 }
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [mode, setMode] = useState<'spectrum' | 'waveform'>('spectrum');
   const animFrameIdRef = useRef<number | null>(null);
+  const { t } = useLanguageStore();
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -139,7 +141,7 @@ export const AudioVisualizer: React.FC<AudioVisualizerProps> = ({ height = 120 }
           }`}
           title="Modo Espectro de Frequências (FFT)"
         >
-          <Activity className="w-3 h-3" /> Espectro
+          <Activity className="w-3 h-3" /> {t.spectrum}
         </button>
         <button
           onClick={() => setMode('waveform')}
@@ -148,12 +150,12 @@ export const AudioVisualizer: React.FC<AudioVisualizerProps> = ({ height = 120 }
           }`}
           title="Modo Osciloscópio (Waveform)"
         >
-          <Radio className="w-3 h-3" /> Onda
+          <Radio className="w-3 h-3" /> {t.waveform}
         </button>
       </div>
 
       <div className="absolute top-2 left-2 z-10 text-[10px] font-mono text-gray-500 uppercase tracking-widest pointer-events-none">
-        Master Real-time Visualizer
+        {t.visualizerTitle}
       </div>
 
       {/* Canvas */}

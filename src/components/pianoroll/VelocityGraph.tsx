@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { useProjectStore } from '../../store/useProjectStore';
+import { useLanguageStore } from '../../store/useLanguageStore';
 import { BarChart3 } from 'lucide-react';
 
 interface VelocityGraphProps {
@@ -8,6 +9,7 @@ interface VelocityGraphProps {
 
 export const VelocityGraph: React.FC<VelocityGraphProps> = ({ channelId }) => {
   const { channels, setVelocity, isPlaying, currentStep } = useProjectStore();
+  const { t } = useLanguageStore();
   const channel = channels.find(c => c.id === channelId);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -47,9 +49,9 @@ export const VelocityGraph: React.FC<VelocityGraphProps> = ({ channelId }) => {
       <div className="flex items-center justify-between text-[11px] font-mono text-gray-400">
         <div className="flex items-center gap-1.5 text-white font-semibold">
           <BarChart3 className="w-3.5 h-3.5 text-fl-accent" />
-          <span>Graph Editor: Velocidade / Dinâmica por Passo</span>
+          <span>{t.velocityGraphTitle}</span>
         </div>
-        <span>Canal: <strong className="text-fl-accent">{channel.name}</strong></span>
+        <span>{t.channel}: <strong className="text-fl-accent">{channel.name}</strong></span>
       </div>
 
       {/* Grid de 16 Barras de Velocity */}
@@ -67,7 +69,7 @@ export const VelocityGraph: React.FC<VelocityGraphProps> = ({ channelId }) => {
               className={`relative h-full flex flex-col justify-end items-center cursor-ns-resize group rounded transition-colors ${
                 isCurrentPlayhead ? 'bg-fl-lcd/10' : 'hover:bg-fl-border/40'
               }`}
-              title={`Passo ${stepIdx + 1}: ${Math.round(vel * 100)}%`}
+              title={`${t.step} ${stepIdx + 1}: ${Math.round(vel * 100)}%`}
             >
               {/* Linha guia de fundo */}
               <div className="absolute inset-x-0.5 bottom-0 top-0 flex items-center justify-center pointer-events-none">

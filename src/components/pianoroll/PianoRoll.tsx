@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useProjectStore } from '../../store/useProjectStore';
+import { useLanguageStore } from '../../store/useLanguageStore';
 import { audioEngine } from '../../audio/AudioEngine';
 import { VelocityGraph } from './VelocityGraph';
 import { Note } from '../../types';
@@ -40,6 +41,7 @@ export const PianoRoll: React.FC = () => {
     addNote, removeNote, isPlaying, currentStep, bpm
   } = useProjectStore();
 
+  const { t } = useLanguageStore();
   const [noteDuration, setNoteDuration] = useState<number>(1); // em steps
   const [showVelocity, setShowVelocity] = useState<boolean>(true);
 
@@ -85,7 +87,7 @@ export const PianoRoll: React.FC = () => {
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-white">
             <Music className="w-4 h-4 text-fl-accent" />
-            <span>Piano Roll Melódico</span>
+            <span>{t.pianoRollTitle}</span>
           </div>
 
           <div className="flex items-center gap-1 bg-fl-bg p-1 rounded border border-fl-border">
@@ -107,7 +109,7 @@ export const PianoRoll: React.FC = () => {
 
         {/* Note Duration & Controls */}
         <div className="flex items-center gap-2 text-xs">
-          <span className="text-gray-400 font-mono text-[11px]">Duração:</span>
+          <span className="text-gray-400 font-mono text-[11px]">{t.duration}:</span>
           <div className="flex items-center bg-fl-bg p-0.5 rounded border border-fl-border">
             <button
               onClick={() => setNoteDuration(1)}
@@ -141,22 +143,22 @@ export const PianoRoll: React.FC = () => {
               showVelocity ? 'bg-fl-border text-fl-accent border-fl-accent/50' : 'bg-fl-bg text-gray-400 border-fl-border hover:text-white'
             }`}
           >
-            <BarChart2 className="w-3 h-3" /> Velocity
+            <BarChart2 className="w-3 h-3" /> {t.velocity}
           </button>
 
           <button
             onClick={handleClearAllNotes}
             className="flex items-center gap-1 px-2 py-1 rounded bg-fl-bg hover:bg-fl-border text-gray-400 hover:text-fl-red border border-fl-border transition-all text-[11px]"
-            title="Limpar todas as notas do canal"
+            title={t.clearAllNotes}
           >
-            <Trash2 className="w-3 h-3" /> Limpar
+            <Trash2 className="w-3 h-3" /> {t.clear}
           </button>
         </div>
       </div>
 
       {/* Step Numbers Bar */}
       <div className="flex items-center bg-fl-surface/50 border-b border-fl-border px-3 py-1 text-[10px] font-mono text-gray-400">
-        <div className="w-16 shrink-0 text-center font-bold">NOTA</div>
+        <div className="w-16 shrink-0 text-center font-bold">{t.note}</div>
         <div className="flex-1 grid grid-cols-16 gap-0.5 text-center">
           {Array.from({ length: 16 }).map((_, i) => (
             <span key={i} className={i % 4 === 0 ? 'text-fl-accent font-bold' : 'text-gray-500'}>
@@ -181,7 +183,7 @@ export const PianoRoll: React.FC = () => {
                       ? 'bg-[#2a2c3a] text-fl-lcd border-b-2 border-b-fl-lcd/40 font-extrabold'
                       : 'bg-[#222430] text-gray-200 hover:bg-[#303344]'
                 }`}
-                title={`Tocar nota ${key.name}`}
+                title={`${t.play} ${key.name}`}
               >
                 <span>{key.name}</span>
                 {key.isRoot && <span className="w-1.5 h-1.5 rounded-full bg-fl-lcd" />}

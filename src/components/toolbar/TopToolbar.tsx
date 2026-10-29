@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { 
   Play, Square, Sliders, Music, Download, 
-  Grid, Plus, Layers, Sparkles, Loader2 
+  Grid, Plus, Layers, Sparkles, Loader2, Globe 
 } from 'lucide-react';
 import { useProjectStore } from '../../store/useProjectStore';
+import { useLanguageStore } from '../../store/useLanguageStore';
 import { audioEngine } from '../../audio/AudioEngine';
 import { exportSongToWAV } from '../../audio/WavExporter';
 import { LcdDisplay } from '../common/LcdDisplay';
@@ -15,6 +16,7 @@ export const TopToolbar: React.FC = () => {
     setActiveWindow, createNewPattern, loadDemoSong
   } = useProjectStore();
 
+  const { t, language, setLanguage } = useLanguageStore();
   const [isExporting, setIsExporting] = useState(false);
 
   const handleTogglePlay = () => {
@@ -53,7 +55,7 @@ export const TopToolbar: React.FC = () => {
             <span className="text-sm font-bold tracking-wider text-white flex items-center gap-1.5">
               MUSICX STUDIO <span className="text-[10px] px-1.5 py-0.2 bg-fl-accent/20 text-fl-accent rounded border border-fl-accent/30 font-mono">v2.0 PRO</span>
             </span>
-            <span className="text-[10px] text-gray-400 font-mono tracking-tight">REACT + TAILWIND DAW</span>
+            <span className="text-[10px] text-gray-400 font-mono tracking-tight">{t.brandSubtitle}</span>
           </div>
         </div>
 
@@ -68,14 +70,14 @@ export const TopToolbar: React.FC = () => {
                 ? 'bg-fl-green text-black shadow-lg shadow-fl-green/30 animate-pulse' 
                 : 'bg-fl-panel text-gray-200 hover:bg-fl-border hover:text-white'
             }`}
-            title="Play / Pause (Barra de Espaço)"
+            title={`${isPlaying ? t.pause : t.play} (Space)`}
           >
             <Play className="w-3.5 h-3.5 fill-current" />
           </button>
           <button
             onClick={() => audioEngine.stop()}
             className="p-1.5 rounded bg-fl-panel hover:bg-fl-border text-gray-300 hover:text-fl-red transition-all"
-            title="Stop (Enter)"
+            title={`${t.stop} (Enter)`}
           >
             <Square className="w-3.5 h-3.5 fill-current" />
           </button>
@@ -112,14 +114,14 @@ export const TopToolbar: React.FC = () => {
 
         {/* Pattern Selector */}
         <div className="flex items-center gap-1 bg-fl-surface px-2 py-1 rounded border border-fl-border text-xs">
-          <span className="text-gray-400 text-[11px]">Pattern:</span>
+          <span className="text-gray-400 text-[11px]">{t.pattern}:</span>
           <button 
             onClick={() => setActivePatternId(Math.max(1, activePatternId - 1))}
             className="px-1 text-gray-400 hover:text-white font-bold"
           >
             ‹
           </button>
-          <span className="font-mono text-fl-accent font-bold px-1">Pattern {activePatternId}</span>
+          <span className="font-mono text-fl-accent font-bold px-1">{t.pattern} {activePatternId}</span>
           <button 
             onClick={() => setActivePatternId(Math.min(patterns.length, activePatternId + 1))}
             className="px-1 text-gray-400 hover:text-white font-bold"
@@ -129,7 +131,7 @@ export const TopToolbar: React.FC = () => {
           <button
             onClick={createNewPattern}
             className="ml-1 p-0.5 text-gray-400 hover:text-fl-green transition-colors"
-            title="Criar Novo Pattern"
+            title={t.newPattern}
           >
             <Plus className="w-3 h-3" />
           </button>
@@ -138,6 +140,7 @@ export const TopToolbar: React.FC = () => {
 
       {/* Window View Toggles & Actions */}
       <div className="flex items-center gap-2">
+        {/* Navigation Tabs */}
         <div className="flex items-center bg-fl-surface p-1 rounded-md border border-fl-border text-xs">
           <button
             onClick={() => setActiveWindow('rack')}
@@ -145,7 +148,7 @@ export const TopToolbar: React.FC = () => {
               activeWindow === 'rack' ? 'bg-fl-panel text-fl-accent font-semibold shadow' : 'text-gray-400 hover:text-white'
             }`}
           >
-            <Grid className="w-3.5 h-3.5" /> Rack
+            <Grid className="w-3.5 h-3.5" /> {t.rack}
           </button>
           <button
             onClick={() => setActiveWindow('pianoroll')}
@@ -153,7 +156,7 @@ export const TopToolbar: React.FC = () => {
               activeWindow === 'pianoroll' ? 'bg-fl-panel text-fl-accent font-semibold shadow' : 'text-gray-400 hover:text-white'
             }`}
           >
-            <Music className="w-3.5 h-3.5" /> Piano Roll
+            <Music className="w-3.5 h-3.5" /> {t.pianoroll}
           </button>
           <button
             onClick={() => setActiveWindow('mixer')}
@@ -161,7 +164,7 @@ export const TopToolbar: React.FC = () => {
               activeWindow === 'mixer' ? 'bg-fl-panel text-fl-accent font-semibold shadow' : 'text-gray-400 hover:text-white'
             }`}
           >
-            <Sliders className="w-3.5 h-3.5" /> Mixer
+            <Sliders className="w-3.5 h-3.5" /> {t.mixer}
           </button>
           <button
             onClick={() => setActiveWindow('playlist')}
@@ -169,21 +172,23 @@ export const TopToolbar: React.FC = () => {
               activeWindow === 'playlist' ? 'bg-fl-panel text-fl-accent font-semibold shadow' : 'text-gray-400 hover:text-white'
             }`}
           >
-            <Layers className="w-3.5 h-3.5" /> Playlist
+            <Layers className="w-3.5 h-3.5" /> {t.playlist}
           </button>
         </div>
 
+        {/* Demo Song Button */}
         <button
           onClick={() => {
             loadDemoSong();
             setPlayMode('SONG');
           }}
           className="flex items-center gap-1.5 px-2.5 py-1.5 bg-fl-surface hover:bg-fl-border border border-fl-border rounded-md text-xs font-semibold text-fl-green transition-all"
-          title="Carregar Demo Song Completo"
+          title={t.loadDemoSong}
         >
-          <Sparkles className="w-3.5 h-3.5" /> Demo Song
+          <Sparkles className="w-3.5 h-3.5" /> {t.demoSong}
         </button>
 
+        {/* Export WAV Button */}
         <button
           onClick={handleExportWAV}
           disabled={isExporting}
@@ -192,18 +197,45 @@ export const TopToolbar: React.FC = () => {
               ? 'bg-fl-surface border border-fl-accent text-fl-accent animate-pulse cursor-wait'
               : 'bg-fl-surface hover:bg-fl-border border border-fl-border text-fl-accent hover:shadow-fl-glow'
           }`}
-          title="Exportar Música Offline (.WAV 16-bit PCM)"
+          title={t.exportWav}
         >
           {isExporting ? (
             <>
-              <Loader2 className="w-3.5 h-3.5 animate-spin" /> Renderizando...
+              <Loader2 className="w-3.5 h-3.5 animate-spin" /> {t.exporting}
             </>
           ) : (
             <>
-              <Download className="w-3.5 h-3.5" /> Export WAV
+              <Download className="w-3.5 h-3.5" /> {t.exportWav}
             </>
           )}
         </button>
+
+        {/* Language Switcher Selector (PT-BR default / EN selectable) */}
+        <div className="flex items-center bg-fl-surface p-1 rounded-md border border-fl-border text-xs font-mono">
+          <Globe className="w-3.5 h-3.5 text-gray-400 mr-1 ml-0.5" />
+          <button
+            onClick={() => setLanguage('pt-BR')}
+            className={`px-1.5 py-0.5 rounded transition-all ${
+              language === 'pt-BR'
+                ? 'bg-fl-accent text-white font-bold'
+                : 'text-gray-400 hover:text-white'
+            }`}
+            title="Mudar idioma para Português (Brasil)"
+          >
+            PT
+          </button>
+          <button
+            onClick={() => setLanguage('en')}
+            className={`px-1.5 py-0.5 rounded transition-all ${
+              language === 'en'
+                ? 'bg-fl-accent text-white font-bold'
+                : 'text-gray-400 hover:text-white'
+            }`}
+            title="Switch language to English"
+          >
+            EN
+          </button>
+        </div>
       </div>
     </header>
   );

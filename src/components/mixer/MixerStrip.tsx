@@ -2,6 +2,7 @@ import React from 'react';
 import { MixerTrack } from '../../types';
 import { RotaryKnob } from '../common/RotaryKnob';
 import { useMixerStore } from '../../store/useMixerStore';
+import { useLanguageStore } from '../../store/useLanguageStore';
 import { audioEngine } from '../../audio/AudioEngine';
 
 interface MixerStripProps {
@@ -15,6 +16,7 @@ export const MixerStrip: React.FC<MixerStripProps> = ({ track, isMaster = false 
     toggleTrackMute, toggleTrackSolo, setEq, setSend, selectTrack 
   } = useMixerStore();
 
+  const { t } = useLanguageStore();
   const isSelected = selectedTrackId === track.id;
 
   // Atualiza audio engine em tempo real quando fader é movido
@@ -64,13 +66,13 @@ export const MixerStrip: React.FC<MixerStripProps> = ({ track, isMaster = false 
           <span className="text-gray-400 font-mono text-[9px]">{volToDb(track.vol)}</span>
         </div>
         <div className="text-xs font-bold text-white truncate" title={track.name}>
-          {track.name}
+          {isMaster ? t.master : track.name}
         </div>
       </div>
 
       {/* 3-Band EQ Knobs */}
       <div className="py-2 border-b border-fl-border/40 flex flex-col items-center gap-1.5 bg-fl-bg/40 rounded my-1.5">
-        <span className="text-[9px] font-mono text-gray-400 uppercase tracking-wider">Equalizador</span>
+        <span className="text-[9px] font-mono text-gray-400 uppercase tracking-wider">{t.equalizer}</span>
         <div className="grid grid-cols-3 gap-1 w-full px-1">
           <RotaryKnob
             value={track.eqHigh}
@@ -114,7 +116,7 @@ export const MixerStrip: React.FC<MixerStripProps> = ({ track, isMaster = false 
       {/* Aux Sends Knobs (para canais de insert) */}
       {!isMaster && (
         <div className="py-1.5 border-b border-fl-border/40 flex flex-col items-center gap-1 bg-fl-bg/30 rounded mb-1.5">
-          <span className="text-[9px] font-mono text-gray-400 uppercase tracking-wider">Sends FX</span>
+          <span className="text-[9px] font-mono text-gray-400 uppercase tracking-wider">{t.sendsFx}</span>
           <div className="grid grid-cols-3 gap-1 w-full px-1">
             <RotaryKnob
               value={track.revSend}
@@ -122,7 +124,7 @@ export const MixerStrip: React.FC<MixerStripProps> = ({ track, isMaster = false 
               max={1}
               defaultValue={0}
               size={20}
-              label="REV"
+              label={t.reverb}
               color="#a855f7"
               onChange={(v) => handleSendChange('revSend', v)}
             />
@@ -132,7 +134,7 @@ export const MixerStrip: React.FC<MixerStripProps> = ({ track, isMaster = false 
               max={1}
               defaultValue={0}
               size={20}
-              label="DEL"
+              label={t.delay}
               color="#3b82f6"
               onChange={(v) => handleSendChange('delSend', v)}
             />
@@ -142,7 +144,7 @@ export const MixerStrip: React.FC<MixerStripProps> = ({ track, isMaster = false 
               max={1}
               defaultValue={0}
               size={20}
-              label="DST"
+              label={t.distortion}
               color="#ff4136"
               onChange={(v) => handleSendChange('distSend', v)}
             />
@@ -158,7 +160,7 @@ export const MixerStrip: React.FC<MixerStripProps> = ({ track, isMaster = false 
           max={1}
           defaultValue={0}
           size={24}
-          label="PAN"
+          label={t.pan}
           bipolar={true}
           color="#3b82f6"
           onChange={handlePanChange}
@@ -208,7 +210,7 @@ export const MixerStrip: React.FC<MixerStripProps> = ({ track, isMaster = false 
               ? 'bg-fl-red text-white shadow-sm' 
               : 'bg-fl-bg text-gray-400 hover:text-white hover:bg-fl-border'
           }`}
-          title="Mute Track"
+          title={t.mute}
         >
           M
         </button>
@@ -224,7 +226,7 @@ export const MixerStrip: React.FC<MixerStripProps> = ({ track, isMaster = false 
                 ? 'bg-fl-green text-black font-extrabold shadow-sm' 
                 : 'bg-fl-bg text-gray-400 hover:text-white hover:bg-fl-border'
             }`}
-            title="Solo Track"
+            title={t.solo}
           >
             S
           </button>

@@ -1,10 +1,12 @@
 import React from 'react';
 import { useProjectStore } from '../../store/useProjectStore';
+import { useLanguageStore } from '../../store/useLanguageStore';
 import { ChannelRow } from './ChannelRow';
 import { Grid, SlidersHorizontal, Info } from 'lucide-react';
 
 export const ChannelRack: React.FC = () => {
   const { channels, swing, setSwing, patterns, activePatternId } = useProjectStore();
+  const { t } = useLanguageStore();
   const currentPattern = patterns.find(p => p.id === activePatternId);
 
   return (
@@ -14,14 +16,14 @@ export const ChannelRack: React.FC = () => {
         <div className="flex items-center gap-2">
           <Grid className="w-4 h-4 text-fl-accent" />
           <span className="text-xs font-bold uppercase tracking-wider text-white">
-            Channel Rack — {currentPattern?.name || `Pattern ${activePatternId}`}
+            {t.channelRackTitle} — {currentPattern?.name || `${t.pattern} ${activePatternId}`}
           </span>
         </div>
 
         {/* Swing Groove Slider */}
         <div className="flex items-center gap-2 bg-fl-bg px-3 py-1 rounded border border-fl-border text-xs">
           <SlidersHorizontal className="w-3.5 h-3.5 text-fl-accent" />
-          <span className="text-[11px] text-gray-400 font-mono">Swing:</span>
+          <span className="text-[11px] text-gray-400 font-mono">{t.swing}:</span>
           <input
             type="range"
             min="0"
@@ -39,7 +41,7 @@ export const ChannelRack: React.FC = () => {
 
       {/* Step Numbers Legend (1 to 16) */}
       <div className="flex items-center gap-3 px-3 pt-2 pb-1 text-[10px] font-mono text-gray-400">
-        <div className="w-56 shrink-0 pl-3">CANAL / CONTROLES</div>
+        <div className="w-56 shrink-0 pl-3">{t.channelsAndControls}</div>
         <div className="flex-1 grid grid-cols-16 gap-1 text-center">
           {Array.from({ length: 16 }).map((_, i) => {
             const isBeatStart = i % 4 === 0;
@@ -66,9 +68,9 @@ export const ChannelRack: React.FC = () => {
       <div className="bg-fl-surface/50 px-4 py-2 border-t border-fl-border/40 flex items-center justify-between text-[11px] text-gray-400 font-mono">
         <div className="flex items-center gap-1.5">
           <Info className="w-3.5 h-3.5 text-fl-accent" />
-          <span>Arraste e solte arquivos <strong>.wav</strong> ou <strong>.mp3</strong> do seu computador em qualquer canal.</span>
+          <span>{t.dropAudioTip}</span>
         </div>
-        <span className="text-gray-400">4 Canais DSP Ativos</span>
+        <span className="text-gray-400">{t.activeDspChannels}</span>
       </div>
     </div>
   );

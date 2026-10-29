@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Channel } from '../../types';
 import { RotaryKnob } from '../common/RotaryKnob';
 import { useProjectStore } from '../../store/useProjectStore';
+import { useLanguageStore } from '../../store/useLanguageStore';
 import { audioEngine } from '../../audio/AudioEngine';
 import { Upload, Music2 } from 'lucide-react';
 
@@ -17,6 +18,7 @@ export const ChannelRow: React.FC<ChannelRowProps> = ({ channel }) => {
     setCustomBuffer, setActiveChannelId, setActiveWindow
   } = useProjectStore();
 
+  const { t } = useLanguageStore();
   const [isDragOver, setIsDragOver] = useState(false);
 
   // Preview sound on channel name click
@@ -98,7 +100,7 @@ export const ChannelRow: React.FC<ChannelRowProps> = ({ channel }) => {
       {/* Indicador de Drag Over */}
       {isDragOver && (
         <div className="absolute inset-0 bg-fl-panel/90 backdrop-blur-sm z-30 flex items-center justify-center gap-2 text-fl-accent font-bold text-xs uppercase tracking-wider rounded-lg border-2 border-dashed border-fl-accent animate-pulse">
-          <Upload className="w-4 h-4" /> Solte o sample aqui para carregar
+          <Upload className="w-4 h-4" /> {t.dropSampleHere}
         </div>
       )}
 
@@ -113,7 +115,7 @@ export const ChannelRow: React.FC<ChannelRowProps> = ({ channel }) => {
                 ? 'bg-fl-red text-white shadow-sm' 
                 : 'bg-fl-panel text-gray-400 hover:text-white hover:bg-fl-border'
             }`}
-            title="Mute Channel"
+            title={t.mute}
           >
             M
           </button>
@@ -124,7 +126,7 @@ export const ChannelRow: React.FC<ChannelRowProps> = ({ channel }) => {
                 ? 'bg-fl-green text-black font-extrabold shadow-sm' 
                 : 'bg-fl-panel text-gray-400 hover:text-white hover:bg-fl-border'
             }`}
-            title="Solo Channel"
+            title={t.solo}
           >
             S
           </button>
@@ -133,7 +135,7 @@ export const ChannelRow: React.FC<ChannelRowProps> = ({ channel }) => {
           <button
             onClick={handlePreviewSound}
             className="flex items-center gap-1 text-left text-xs font-semibold text-white hover:text-fl-accent transition-colors truncate max-w-[85px]"
-            title={`Clique para tocar ${channel.name} / Arraste um arquivo .wav aqui`}
+            title={`${channel.name} — ${t.previewSound}`}
           >
             <span 
               className="w-1.5 h-3 rounded-full shrink-0" 
@@ -151,7 +153,7 @@ export const ChannelRow: React.FC<ChannelRowProps> = ({ channel }) => {
             max={1}
             defaultValue={0.8}
             size={24}
-            label="VOL"
+            label={t.vol}
             color="#ff851b"
             onChange={(v) => setChannelVol(channel.id, v)}
           />
@@ -161,7 +163,7 @@ export const ChannelRow: React.FC<ChannelRowProps> = ({ channel }) => {
             max={1}
             defaultValue={0}
             size={24}
-            label="PAN"
+            label={t.pan}
             bipolar={true}
             color="#3b82f6"
             onChange={(v) => setChannelPan(channel.id, v)}
@@ -170,7 +172,7 @@ export const ChannelRow: React.FC<ChannelRowProps> = ({ channel }) => {
           <button
             onClick={handleOpenPianoRoll}
             className="p-1 rounded bg-fl-panel hover:bg-fl-border text-gray-400 hover:text-fl-accent transition-all"
-            title="Abrir no Piano Roll"
+            title={t.openPianoRoll}
           >
             <Music2 className="w-3.5 h-3.5" />
           </button>
@@ -194,7 +196,7 @@ export const ChannelRow: React.FC<ChannelRowProps> = ({ channel }) => {
                     ? 'bg-fl-step-off-a/80 border-fl-border/60 hover:border-gray-400'
                     : 'bg-fl-step-off-b/80 border-fl-border/40 hover:border-gray-400'
               } ${isCurrentPlayhead ? 'ring-2 ring-fl-lcd ring-offset-1 ring-offset-fl-bg scale-105 z-10' : ''}`}
-              title={`Passo ${stepIdx + 1} (${active === 1 ? 'Ligado' : 'Desligado'})`}
+              title={`${t.step} ${stepIdx + 1} (${active === 1 ? t.stepActive : t.stepInactive})`}
             >
               {active === 1 && (
                 <span className="w-1.5 h-1.5 rounded-full bg-white shadow-sm" />

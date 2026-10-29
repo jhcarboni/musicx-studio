@@ -31,6 +31,9 @@ export default {
       boxShadow: {
         'fl-glow': '0 0 10px rgba(255, 133, 27, 0.4)',
         'lcd-glow': '0 0 8px rgba(0, 255, 204, 0.5)',
+      },
+      gridTemplateColumns: {
+        '16': 'repeat(16, minmax(0, 1fr))',
       }
     },
   },

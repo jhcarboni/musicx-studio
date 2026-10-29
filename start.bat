@@ -1,8 +1,8 @@
 @echo off
-title MusicX Studio
+title MusicX Studio (React + Vite)
 cd /d "%~dp0"
 echo ==============================================
-echo       Iniciando o MusicX Studio...
+echo       Iniciando o MusicX Studio (Vite)...
 echo ==============================================
-node server.js
+call npm.cmd run dev
 pause

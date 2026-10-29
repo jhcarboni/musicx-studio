@@ -1,20 +1,67 @@
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
 import { 
-  Play, Square, Sliders, Music, Radio, Download, 
-  CheckCircle2, Clock, Volume2, Sparkles, Activity,
-  Maximize2, Eye, Grid
+  Play, Square, Sliders, Music, Download, 
+  CheckCircle2, Clock, Volume2, Activity,
+  Grid, Plus, Layers, Sparkles
 } from 'lucide-react';
+import { useProjectStore } from './store/useProjectStore';
+import { useMixerStore } from './store/useMixerStore';
+import { audioEngine } from './audio/AudioEngine';
+import { exportSongToWAV } from './audio/WavExporter';
 
 export default function App() {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [bpm, setBpm] = useState(130);
-  const [playMode, setPlayMode] = useState<'PAT' | 'SONG'>('PAT');
-  const [activePattern, setActivePattern] = useState(1);
-  const [activeWindow, setActiveWindow] = useState<'rack' | 'pianoroll' | 'mixer' | 'playlist'>('rack');
+  const { 
+    bpm, swing, isPlaying, playMode, currentStep, currentBar,
+    activePatternId, activeWindow, activeChannelId, channels,
+    patterns, setBpm, setSwing, setPlayMode, setActivePatternId,
+    setActiveWindow, setActiveChannelId, toggleStep, setChannelVol,
+    setChannelPan, toggleChannelMute, toggleChannelSolo, createNewPattern,
+    loadDemoSong
+  } = useProjectStore();
+
+  const { tracks, selectedTrackId, setTrackVol } = useMixerStore();
+
+  // Spacebar Play / Pause shortcut
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.code === 'Space' && (e.target as HTMLElement).tagName !== 'INPUT') {
+        e.preventDefault();
+        if (isPlaying) {
+          audioEngine.stop();
+        } else {
+          audioEngine.start();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isPlaying]);
+
+  const handleTogglePlay = () => {
+    if (isPlaying) {
+      audioEngine.stop();
+    } else {
+      audioEngine.start();
+    }
+  };
+
+  const handleExportWAV = async () => {
+    try {
+      const blob = await exportSongToWAV(16);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `musicx_studio_export_${Date.now()}.wav`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Erro na exportação:', err);
+    }
+  };
 
   const waves = [
     { id: 0, title: 'Onda 0: Fundação & Design System', desc: 'Vite + React + TypeScript + Tailwind CSS configurados', done: true },
-    { id: 1, title: 'Onda 1: Audio Engine & Zustand Store', desc: 'Síntese pura desvinculada do ciclo React e sincronização atômica', done: false },
+    { id: 1, title: 'Onda 1: Audio Engine & Zustand Store', desc: 'Síntese pura desvinculada do ciclo React e sincronização atômica', done: true },
     { id: 2, title: 'Onda 2: Toolbar & Channel Rack 16 Steps', desc: 'Knobs táteis, sequenciador com drag-and-drop de samples', done: false },
     { id: 3, title: 'Onda 3: Mixer Dedicado & Analisador Canvas', desc: '5 tracks, sends de FX (Reverb/Delay/Dist) e espectro em tempo real', done: false },
     { id: 4, title: 'Onda 4: Piano Roll & Velocity Graph', desc: 'Grade melódica C2-B5, sintetizador polifônico e controle de dinâmica', done: false },
@@ -35,7 +82,7 @@ export default function App() {
               <span className="text-sm font-bold tracking-wider text-white flex items-center gap-1.5">
                 MUSICX STUDIO <span className="text-[10px] px-1.5 py-0.2 bg-fl-accent/20 text-fl-accent rounded border border-fl-accent/30 font-mono">v2.0 PRO</span>
               </span>
-              <span className="text-[10px] text-gray-400 font-mono tracking-tight">REACT + TAILWIND ENGINE</span>
+              <span className="text-[10px] text-gray-400 font-mono tracking-tight">REACT + TONE DSP CORE</span>
             </div>
           </div>
 
@@ -44,10 +91,10 @@ export default function App() {
           {/* Transport Controls */}
           <div className="flex items-center gap-1.5 bg-fl-surface px-2 py-1 rounded-md border border-fl-border">
             <button
-              onClick={() => setIsPlaying(!isPlaying)}
+              onClick={handleTogglePlay}
               className={`p-1.5 rounded transition-all flex items-center gap-1 text-xs font-semibold ${
                 isPlaying 
-                  ? 'bg-fl-green text-black shadow-lg shadow-fl-green/30' 
+                  ? 'bg-fl-green text-black shadow-lg shadow-fl-green/30 animate-pulse' 
                   : 'bg-fl-panel text-gray-200 hover:bg-fl-border hover:text-white'
               }`}
               title="Play / Pause (Space)"
@@ -55,7 +102,7 @@ export default function App() {
               <Play className="w-3.5 h-3.5 fill-current" />
             </button>
             <button
-              onClick={() => setIsPlaying(false)}
+              onClick={() => audioEngine.stop()}
               className="p-1.5 rounded bg-fl-panel hover:bg-fl-border text-gray-300 hover:text-fl-red transition-all"
               title="Stop"
             >
@@ -100,59 +147,40 @@ export default function App() {
           <div className="flex items-center gap-1 bg-fl-surface px-2 py-1 rounded border border-fl-border text-xs">
             <span className="text-gray-400 text-[11px]">Pattern:</span>
             <button 
-              onClick={() => setActivePattern(Math.max(1, activePattern - 1))}
-              className="px-1 text-gray-400 hover:text-white"
+              onClick={() => setActivePatternId(Math.max(1, activePatternId - 1))}
+              className="px-1 text-gray-400 hover:text-white font-bold"
             >
               ‹
             </button>
-            <span className="font-mono text-fl-accent font-bold px-1">Pattern {activePattern}</span>
+            <span className="font-mono text-fl-accent font-bold px-1">Pattern {activePatternId}</span>
             <button 
-              onClick={() => setActivePattern(activePattern + 1)}
-              className="px-1 text-gray-400 hover:text-white"
+              onClick={() => setActivePatternId(Math.min(patterns.length, activePatternId + 1))}
+              className="px-1 text-gray-400 hover:text-white font-bold"
             >
               ›
+            </button>
+            <button
+              onClick={createNewPattern}
+              className="ml-1 p-0.5 text-gray-400 hover:text-fl-green"
+              title="Novo Pattern"
+            >
+              <Plus className="w-3 h-3" />
             </button>
           </div>
         </div>
 
         {/* Window View Toggles & Actions */}
         <div className="flex items-center gap-2">
-          <div className="flex items-center bg-fl-surface p-1 rounded-md border border-fl-border text-xs">
-            <button
-              onClick={() => setActiveWindow('rack')}
-              className={`px-2.5 py-1 rounded flex items-center gap-1.5 transition-all ${
-                activeWindow === 'rack' ? 'bg-fl-panel text-fl-accent font-semibold shadow' : 'text-gray-400 hover:text-white'
-              }`}
-            >
-              <Grid className="w-3.5 h-3.5" /> Rack
-            </button>
-            <button
-              onClick={() => setActiveWindow('pianoroll')}
-              className={`px-2.5 py-1 rounded flex items-center gap-1.5 transition-all ${
-                activeWindow === 'pianoroll' ? 'bg-fl-panel text-fl-accent font-semibold shadow' : 'text-gray-400 hover:text-white'
-              }`}
-            >
-              <Music className="w-3.5 h-3.5" /> Piano Roll
-            </button>
-            <button
-              onClick={() => setActiveWindow('mixer')}
-              className={`px-2.5 py-1 rounded flex items-center gap-1.5 transition-all ${
-                activeWindow === 'mixer' ? 'bg-fl-panel text-fl-accent font-semibold shadow' : 'text-gray-400 hover:text-white'
-              }`}
-            >
-              <Sliders className="w-3.5 h-3.5" /> Mixer
-            </button>
-            <button
-              onClick={() => setActiveWindow('playlist')}
-              className={`px-2.5 py-1 rounded flex items-center gap-1.5 transition-all ${
-                activeWindow === 'playlist' ? 'bg-fl-panel text-fl-accent font-semibold shadow' : 'text-gray-400 hover:text-white'
-              }`}
-            >
-              <Layers className="w-3.5 h-3.5" /> Playlist
-            </button>
-          </div>
+          <button
+            onClick={loadDemoSong}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 bg-fl-surface hover:bg-fl-border border border-fl-border rounded-md text-xs font-semibold text-fl-green transition-all"
+            title="Carregar Demo Song Completo"
+          >
+            <Sparkles className="w-3.5 h-3.5" /> Demo Song
+          </button>
 
           <button
+            onClick={handleExportWAV}
             className="flex items-center gap-1.5 px-3 py-1.5 bg-fl-surface hover:bg-fl-border border border-fl-border rounded-md text-xs font-semibold text-fl-accent transition-all hover:shadow-fl-glow"
           >
             <Download className="w-3.5 h-3.5" /> Export WAV
@@ -161,68 +189,108 @@ export default function App() {
       </header>
 
       {/* ========================================================= */}
-      {/* WORKSPACE & MODERNIZATION DASHBOARD                       */}
+      {/* WORKSPACE & MODERN CHANNEL RACK LIVE PREVIEW              */}
       {/* ========================================================= */}
-      <main className="flex-1 p-6 overflow-y-auto max-w-7xl mx-auto w-full">
-        {/* Status Hero Card */}
-        <div className="bg-gradient-to-r from-fl-panel to-fl-surface border border-fl-border rounded-xl p-6 shadow-xl mb-8 relative overflow-hidden">
-          <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-radial from-fl-accent/10 to-transparent pointer-events-none" />
-          
-          <div className="flex items-center gap-3 mb-2">
-            <span className="flex h-3 w-3 relative">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-fl-green opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-fl-green"></span>
-            </span>
-            <span className="text-xs uppercase font-mono tracking-widest text-fl-green font-bold">
-              Onda 0 Concluída com Sucesso
-            </span>
+      <main className="flex-1 p-6 overflow-y-auto max-w-7xl mx-auto w-full space-y-6">
+        {/* Step Sequencer / Channel Rack Core Component Preview */}
+        <div className="bg-fl-panel border border-fl-border rounded-xl shadow-2xl overflow-hidden">
+          <div className="bg-fl-surface px-4 py-2.5 border-b border-fl-border flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Grid className="w-4 h-4 text-fl-accent" />
+              <span className="text-xs font-bold uppercase tracking-wider text-white">Channel Rack (Sequenciador 16 Passos)</span>
+            </div>
+            <div className="flex items-center gap-3 text-xs font-mono">
+              <span className="text-gray-400">Compasso: <strong className="text-fl-lcd">{currentBar + 1}</strong>/16</span>
+              <span className="text-gray-400">Passo: <strong className="text-fl-accent">{currentStep + 1}</strong>/16</span>
+            </div>
           </div>
 
-          <h1 className="text-2xl font-bold text-white tracking-tight mb-2">
-            Ambiente Modernizado: React + TypeScript + Tailwind CSS
-          </h1>
-          <p className="text-sm text-gray-300 max-w-2xl leading-relaxed mb-4">
-            A infraestrutura Vite com React 18, Tailwind CSS (com paleta temática FL Studio), Zustand e TypeScript 
-            está pronta e ativa. O código legado foi preservado com segurança e a estrutura modular para as próximas ondas está montada.
-          </p>
+          {/* Channel Rows */}
+          <div className="p-4 divide-y divide-fl-border/40 space-y-3">
+            {channels.map((ch) => (
+              <div key={ch.id} className="pt-3 first:pt-0 flex items-center gap-3">
+                {/* Channel Controls (Mute, Solo, Name) */}
+                <div className="w-48 flex items-center justify-between bg-fl-surface px-2.5 py-1.5 rounded border border-fl-border">
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => toggleChannelMute(ch.id)}
+                      className={`text-[10px] px-1.5 py-0.5 rounded font-mono font-bold ${
+                        ch.muted ? 'bg-fl-red text-white' : 'bg-fl-panel text-gray-400 hover:text-white'
+                      }`}
+                    >
+                      M
+                    </button>
+                    <button
+                      onClick={() => toggleChannelSolo(ch.id)}
+                      className={`text-[10px] px-1.5 py-0.5 rounded font-mono font-bold ${
+                        ch.solo ? 'bg-fl-green text-black' : 'bg-fl-panel text-gray-400 hover:text-white'
+                      }`}
+                    >
+                      S
+                    </button>
+                    <span className="text-xs font-semibold text-white truncate max-w-[85px]">{ch.name}</span>
+                  </div>
+                  <span className="text-[10px] font-mono text-gray-400">Trk {ch.trackIdx}</span>
+                </div>
 
-          <div className="flex flex-wrap gap-2 text-xs font-mono">
-            <span className="px-2.5 py-1 rounded bg-fl-bg border border-fl-border text-fl-lcd">⚡ Vite 6 HMR</span>
-            <span className="px-2.5 py-1 rounded bg-fl-bg border border-fl-border text-blue-400">⚛️ React 18.3</span>
-            <span className="px-2.5 py-1 rounded bg-fl-bg border border-fl-border text-cyan-400">🎨 Tailwind CSS v3.4</span>
-            <span className="px-2.5 py-1 rounded bg-fl-bg border border-fl-border text-amber-400">🐻 Zustand 5.0</span>
-            <span className="px-2.5 py-1 rounded bg-fl-bg border border-fl-border text-purple-400">🛡️ TypeScript 5.7</span>
+                {/* 16 Step Buttons */}
+                <div className="flex-1 grid grid-cols-16 gap-1">
+                  {ch.pattern.map((active, stepIdx) => {
+                    const isBeatBlockA = Math.floor(stepIdx / 4) % 2 === 0;
+                    const isCurrentPlayhead = isPlaying && currentStep === stepIdx;
+
+                    return (
+                      <button
+                        key={stepIdx}
+                        onClick={() => toggleStep(ch.id, stepIdx)}
+                        className={`h-9 rounded transition-all duration-75 relative flex items-center justify-center border ${
+                          active === 1
+                            ? 'bg-fl-accent border-fl-accent text-white shadow-fl-glow/40'
+                            : isBeatBlockA
+                              ? 'bg-fl-step-off-a/80 border-fl-border/60 hover:border-gray-400'
+                              : 'bg-fl-step-off-b/80 border-fl-border/40 hover:border-gray-400'
+                        } ${isCurrentPlayhead ? 'ring-2 ring-fl-lcd ring-offset-1 ring-offset-fl-bg scale-105 z-10' : ''}`}
+                      >
+                        {active === 1 && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-white shadow-sm" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* Waves Progress Matrix */}
-        <div className="mb-8">
-          <h2 className="text-sm font-bold uppercase tracking-wider text-gray-400 mb-4 flex items-center gap-2">
+        {/* Roadmap Progress Status */}
+        <div className="bg-fl-panel border border-fl-border rounded-xl p-5 shadow-lg">
+          <h2 className="text-sm font-bold uppercase tracking-wider text-gray-400 mb-3 flex items-center gap-2">
             <Activity className="w-4 h-4 text-fl-accent" />
-            Progresso do Plano de Modernização em Ondas
+            Progresso da Modernização em Ondas
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {waves.map((wave) => (
               <div
                 key={wave.id}
-                className={`p-4 rounded-lg border transition-all ${
+                className={`p-3.5 rounded-lg border transition-all ${
                   wave.done 
                     ? 'bg-fl-surface/80 border-fl-green/50 shadow-sm' 
-                    : wave.id === 1 
+                    : wave.id === 2 
                       ? 'bg-fl-panel border-fl-accent/60 shadow-fl-glow/20' 
                       : 'bg-fl-panel/40 border-fl-border opacity-70'
                 }`}
               >
-                <div className="flex items-start justify-between mb-2">
-                  <span className={`text-xs font-mono font-bold ${wave.done ? 'text-fl-green' : wave.id === 1 ? 'text-fl-accent' : 'text-gray-400'}`}>
+                <div className="flex items-start justify-between mb-1.5">
+                  <span className={`text-xs font-mono font-bold ${wave.done ? 'text-fl-green' : wave.id === 2 ? 'text-fl-accent' : 'text-gray-400'}`}>
                     ONDA {wave.id}
                   </span>
                   {wave.done ? (
                     <span className="flex items-center gap-1 text-[11px] text-fl-green font-semibold bg-fl-green/10 px-2 py-0.5 rounded border border-fl-green/30">
                       <CheckCircle2 className="w-3.5 h-3.5" /> Concluído
                     </span>
-                  ) : wave.id === 1 ? (
+                  ) : wave.id === 2 ? (
                     <span className="flex items-center gap-1 text-[11px] text-fl-accent font-semibold bg-fl-accent/10 px-2 py-0.5 rounded border border-fl-accent/30 animate-pulse">
                       <Clock className="w-3.5 h-3.5" /> Próxima
                     </span>
@@ -230,7 +298,7 @@ export default function App() {
                     <span className="text-[11px] text-gray-500 font-mono">Pendente</span>
                   )}
                 </div>
-                <h3 className="text-sm font-semibold text-white mb-1">{wave.title}</h3>
+                <h3 className="text-sm font-semibold text-white mb-0.5">{wave.title}</h3>
                 <p className="text-xs text-gray-400 leading-relaxed">{wave.desc}</p>
               </div>
             ))}
@@ -242,8 +310,8 @@ export default function App() {
       <footer className="h-7 bg-fl-panel border-t border-fl-border px-4 flex items-center justify-between text-[11px] font-mono text-gray-400 shrink-0">
         <div className="flex items-center gap-4">
           <span className="flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-fl-green"></span>
-            Áudio Engine: Standby
+            <span className={`h-2 w-2 rounded-full ${isPlaying ? 'bg-fl-green animate-ping' : 'bg-gray-500'}`}></span>
+            Áudio Engine: {isPlaying ? 'Em Execução' : 'Standby'}
           </span>
           <span>Sample Rate: 44.1 kHz</span>
           <span>Buffer: 512 samples</span>
@@ -253,15 +321,5 @@ export default function App() {
         </div>
       </footer>
     </div>
-  );
-}
-
-function Layers({ className }: { className?: string }) {
-  return (
-    <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <polygon points="12 2 2 7 12 12 22 7 12 2" />
-      <polyline points="2 17 12 22 22 17" />
-      <polyline points="2 12 12 17 22 12" />
-    </svg>
   );
 }

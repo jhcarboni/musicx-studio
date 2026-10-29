@@ -1,5 +1,7 @@
 # 🎛️ MusicX Studio — Web FL Studio DAW (v2.0 Pro)
 
+[🇧🇷 Português](README.md) | [🇺🇸 English](README.en.md)
+
 > Estação de trabalho de áudio digital (DAW) inspirada no fluxo de trabalho do **FL Studio**, construída com **React 18**, **Tailwind CSS**, **TypeScript**, **Zustand** e o motor de alta precisão da **Web Audio API**.
 
 ---

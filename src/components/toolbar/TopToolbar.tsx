@@ -94,25 +94,26 @@ export const TopToolbar: React.FC = () => {
   };
 
   return (
-    <header className="h-14 bg-fl-panel border-b border-fl-border px-4 flex items-center justify-between shadow-md shrink-0 select-none">
-      <div className="flex items-center gap-4">
+    <header className="h-14 bg-fl-panel border-b border-fl-border px-2 sm:px-3 lg:px-4 flex items-center justify-between shadow-md shrink-0 select-none gap-2">
+      <div className="flex items-center gap-1.5 sm:gap-2.5 lg:gap-3.5 shrink-0">
         {/* Logo & Brand */}
-        <div className="flex items-center gap-2">
-          <span className="text-xl">🎛️</span>
-          <div className="flex items-center gap-1.5">
-            <span className="text-sm font-bold tracking-wider text-white">
-              MUSICX STUDIO
+        <div className="flex items-center gap-1.5 shrink-0">
+          <span className="text-lg sm:text-xl">🎛️</span>
+          <div className="flex items-center gap-1">
+            <span className="text-xs sm:text-sm font-black tracking-wider text-white font-mono">
+              MUSIC<span className="text-fl-accent">X</span>
+              <span className="hidden md:inline text-gray-300"> STUDIO</span>
             </span>
-            <span className="text-[10px] px-1.5 py-0.2 bg-fl-accent/20 text-fl-accent rounded border border-fl-accent/30 font-mono font-bold">
+            <span className="hidden xl:inline text-[9px] px-1 py-0.2 bg-fl-accent/20 text-fl-accent rounded border border-fl-accent/30 font-mono font-bold">
               v2.0 PRO
             </span>
           </div>
         </div>
 
-        <div className="h-6 w-px bg-fl-border" />
+        <div className="h-5 w-px bg-fl-border/60 shrink-0 hidden sm:block" />
 
         {/* Transport Controls */}
-        <div className="flex items-center gap-1.5 bg-fl-surface px-2 py-1 rounded-md border border-fl-border">
+        <div className="flex items-center gap-1 bg-fl-surface px-1.5 py-1 rounded-md border border-fl-border shrink-0">
           <button
             onClick={handleTogglePlay}
             className={`p-1.5 rounded transition-all flex items-center gap-1 text-xs font-semibold ${
@@ -133,20 +134,22 @@ export const TopToolbar: React.FC = () => {
           </button>
 
           {/* PAT / SONG Radio Toggle */}
-          <div className="flex items-center ml-2 bg-fl-bg rounded p-0.5 border border-fl-border text-[11px] font-mono">
+          <div className="flex items-center ml-1 bg-fl-bg rounded p-0.5 border border-fl-border text-[10px] font-mono">
             <button
               onClick={() => setPlayMode('PAT')}
-              className={`px-2 py-0.5 rounded transition-all ${
+              className={`px-1.5 py-0.5 rounded transition-all ${
                 playMode === 'PAT' ? 'bg-fl-accent text-white font-bold shadow-sm' : 'text-gray-400 hover:text-white'
               }`}
+              title="Pattern Mode"
             >
               PAT
             </button>
             <button
               onClick={() => setPlayMode('SONG')}
-              className={`px-2 py-0.5 rounded transition-all ${
+              className={`px-1.5 py-0.5 rounded transition-all ${
                 playMode === 'SONG' ? 'bg-fl-accent text-white font-bold shadow-sm' : 'text-gray-400 hover:text-white'
               }`}
+              title="Song Mode (Playlist)"
             >
               SONG
             </button>
@@ -163,8 +166,8 @@ export const TopToolbar: React.FC = () => {
         />
 
         {/* Pattern Selector & Inline Renamer */}
-        <div ref={patternDropdownRef} className="relative flex items-center gap-1 bg-fl-surface px-2 py-1 rounded border border-fl-border text-xs">
-          <span className="text-gray-400 text-[11px]">{t.pattern}:</span>
+        <div ref={patternDropdownRef} className="relative flex items-center gap-0.5 sm:gap-1 bg-fl-surface px-1.5 sm:px-2 py-1 rounded border border-fl-border text-xs shrink-0">
+          <span className="text-gray-400 text-[10px] sm:text-[11px] hidden sm:inline">{t.pattern}:</span>
           
           {/* Navegar para pattern anterior */}
           <button 
@@ -186,7 +189,7 @@ export const TopToolbar: React.FC = () => {
                 onChange={(e) => setPatternNameInput(e.target.value)}
                 onBlur={handleSavePatternName}
                 onKeyDown={handleKeyDown}
-                className="bg-fl-bg text-fl-accent border border-fl-accent/60 rounded px-1.5 py-0.5 font-mono text-xs font-bold w-32 focus:outline-none focus:ring-1 focus:ring-fl-accent shadow-inner"
+                className="bg-fl-bg text-fl-accent border border-fl-accent/60 rounded px-1.5 py-0.5 font-mono text-xs font-bold w-24 sm:w-28 lg:w-32 focus:outline-none focus:ring-1 focus:ring-fl-accent shadow-inner"
                 placeholder={currentPattern?.name || `Pattern ${activePatternId}`}
                 title={t.pressEnterToSave}
               />
@@ -210,7 +213,7 @@ export const TopToolbar: React.FC = () => {
                   className="w-2 h-2 rounded-full shrink-0"
                   style={{ backgroundColor: currentPattern?.color || '#ff851b' }}
                 />
-                <span className="truncate max-w-[110px]">
+                <span className="truncate max-w-[65px] sm:max-w-[85px] md:max-w-[110px] lg:max-w-[130px]">
                   {currentPattern?.name || `${t.pattern} ${activePatternId}`}
                 </span>
                 <Pencil className="w-2.5 h-2.5 opacity-40 group-hover:opacity-100 transition-opacity ml-0.5" />
@@ -240,7 +243,7 @@ export const TopToolbar: React.FC = () => {
           {/* Criar novo pattern (+) */}
           <button
             onClick={createNewPattern}
-            className="ml-1 p-0.5 text-gray-400 hover:text-fl-green transition-colors"
+            className="ml-0.5 sm:ml-1 p-0.5 text-gray-400 hover:text-fl-green transition-colors"
             title={t.newPattern}
           >
             <Plus className="w-3 h-3" />
@@ -307,16 +310,16 @@ export const TopToolbar: React.FC = () => {
       </div>
 
       {/* Window View Toggles & Actions */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1 sm:gap-2 shrink-0">
         {/* Navigation Tabs */}
-        <div className="flex items-center bg-fl-surface p-1 rounded-md border border-fl-border text-xs">
+        <div className="flex items-center bg-fl-surface p-0.5 sm:p-1 rounded-md border border-fl-border text-xs shrink-0">
           <button
             onClick={() => setActiveWindow('rack')}
             className={`px-2.5 py-1 rounded flex items-center gap-1.5 transition-all ${
               activeWindow === 'rack' ? 'bg-fl-panel text-fl-accent font-semibold shadow' : 'text-gray-400 hover:text-white'
             }`}
           >
-            <Grid className="w-3.5 h-3.5" /> {t.rack}
+            <Grid className="w-3.5 h-3.5" /> <span className="hidden xl:inline">{t.rack}</span>
           </button>
           <button
             onClick={() => setActiveWindow('pianoroll')}
@@ -324,7 +327,7 @@ export const TopToolbar: React.FC = () => {
               activeWindow === 'pianoroll' ? 'bg-fl-panel text-fl-accent font-semibold shadow' : 'text-gray-400 hover:text-white'
             }`}
           >
-            <Music className="w-3.5 h-3.5" /> {t.pianoroll}
+            <Music className="w-3.5 h-3.5" /> <span className="hidden xl:inline">{t.pianoroll}</span>
           </button>
           <button
             onClick={() => setActiveWindow('mixer')}
@@ -332,7 +335,7 @@ export const TopToolbar: React.FC = () => {
               activeWindow === 'mixer' ? 'bg-fl-panel text-fl-accent font-semibold shadow' : 'text-gray-400 hover:text-white'
             }`}
           >
-            <Sliders className="w-3.5 h-3.5" /> {t.mixer}
+            <Sliders className="w-3.5 h-3.5" /> <span className="hidden xl:inline">{t.mixer}</span>
           </button>
           <button
             onClick={() => setActiveWindow('playlist')}
@@ -340,7 +343,7 @@ export const TopToolbar: React.FC = () => {
               activeWindow === 'playlist' ? 'bg-fl-panel text-fl-accent font-semibold shadow' : 'text-gray-400 hover:text-white'
             }`}
           >
-            <Layers className="w-3.5 h-3.5" /> {t.playlist}
+            <Layers className="w-3.5 h-3.5" /> <span className="hidden xl:inline">{t.playlist}</span>
           </button>
         </div>
 
@@ -350,17 +353,17 @@ export const TopToolbar: React.FC = () => {
             loadDemoSong();
             setPlayMode('SONG');
           }}
-          className="flex items-center gap-1.5 px-2.5 py-1.5 bg-fl-surface hover:bg-fl-border border border-fl-border rounded-md text-xs font-semibold text-fl-green transition-all"
+          className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 bg-fl-surface hover:bg-fl-border border border-fl-border rounded-md text-xs font-semibold text-fl-green transition-all shrink-0"
           title={t.loadDemoSong}
         >
-          <Sparkles className="w-3.5 h-3.5" /> {t.demoSong}
+          <Sparkles className="w-3.5 h-3.5" /> <span className="hidden lg:inline">{t.demoSong}</span>
         </button>
 
         {/* Export WAV Button */}
         <button
           onClick={handleExportWAV}
           disabled={isExporting}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+          className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-md text-xs font-semibold transition-all shrink-0 ${
             isExporting
               ? 'bg-fl-surface border border-fl-accent text-fl-accent animate-pulse cursor-wait'
               : 'bg-fl-surface hover:bg-fl-border border border-fl-border text-fl-accent hover:shadow-fl-glow'
@@ -369,39 +372,24 @@ export const TopToolbar: React.FC = () => {
         >
           {isExporting ? (
             <>
-              <Loader2 className="w-3.5 h-3.5 animate-spin" /> {t.exporting}
+              <Loader2 className="w-3.5 h-3.5 animate-spin" /> <span className="hidden sm:inline">{t.exporting}</span>
             </>
           ) : (
             <>
-              <Download className="w-3.5 h-3.5" /> {t.exportWav}
+              <Download className="w-3.5 h-3.5" /> <span className="hidden sm:inline">{t.exportWav}</span>
             </>
           )}
         </button>
 
         {/* Language Switcher Selector (PT-BR default / EN selectable) */}
-        <div className="flex items-center bg-fl-surface p-1 rounded-md border border-fl-border text-xs font-mono">
-          <Globe className="w-3.5 h-3.5 text-gray-400 mr-1 ml-0.5" />
+        <div className="flex items-center bg-fl-surface p-0.5 sm:p-1 rounded-md border border-fl-border text-xs font-mono shrink-0">
           <button
-            onClick={() => setLanguage('pt-BR')}
-            className={`px-1.5 py-0.5 rounded transition-all ${
-              language === 'pt-BR'
-                ? 'bg-fl-accent text-white font-bold'
-                : 'text-gray-400 hover:text-white'
-            }`}
-            title="Mudar idioma para Português (Brasil)"
+            onClick={() => setLanguage(language === 'pt-BR' ? 'en' : 'pt-BR')}
+            className="flex items-center gap-1 px-1.5 py-0.5 rounded hover:bg-fl-panel text-gray-300 hover:text-white transition-all group"
+            title={language === 'pt-BR' ? 'Mudar para Inglês (EN)' : 'Switch to Portuguese (PT)'}
           >
-            PT
-          </button>
-          <button
-            onClick={() => setLanguage('en')}
-            className={`px-1.5 py-0.5 rounded transition-all ${
-              language === 'en'
-                ? 'bg-fl-accent text-white font-bold'
-                : 'text-gray-400 hover:text-white'
-            }`}
-            title="Switch language to English"
-          >
-            EN
+            <Globe className="w-3.5 h-3.5 text-gray-400 group-hover:text-fl-accent" />
+            <span className="font-bold text-[11px] text-fl-accent">{language === 'pt-BR' ? 'PT' : 'EN'}</span>
           </button>
         </div>
       </div>

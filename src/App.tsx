@@ -52,7 +52,7 @@ export default function App() {
       <TopToolbar />
 
       {/* Main Workspace Area */}
-      <main className="flex-1 p-6 overflow-y-auto max-w-7xl mx-auto w-full space-y-6">
+      <main className="flex-1 p-3 sm:p-4 lg:p-6 overflow-y-auto max-w-7xl mx-auto w-full space-y-4 sm:space-y-6">
         {/* Render Active Window */}
         {activeWindow === 'rack' && <ChannelRack />}
         {activeWindow === 'pianoroll' && <PianoRoll />}

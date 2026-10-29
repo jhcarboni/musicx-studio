@@ -77,7 +77,7 @@ graph TD
 
 ### 4. 🎵 Playlist Arranger & Exportação WAV
 - **Timeline de 16 Compassos**: 4 pistas horizontais para organização e encadeamento de blocos de patterns.
-- **Seletor de Múltiplos Patterns**: alterne entre `Pattern 1`, `Pattern 2`, etc. ou crie novos patterns com o botão `+`.
+- **Seletor e Renomeação de Patterns**: alterne entre patterns criados, adicione novos com o botão `+`, ou renomeie qualquer padrão digitando diretamente na barra superior ou na Playlist (com salvamento via Enter e sincronização imediata em toda a timeline).
 - **Modo Duplo `[PAT]` / `[SONG]`**: reproduza o padrão em loop ou execute o arranjo completo da Playlist com régua animada.
 - **Preset Demo Song**: botão para carregar uma música completa de demonstração com Intro, Drop e Outro.
 - **Exportação Master WAV**: renderização offline rápida via `OfflineAudioContext` para download de arquivo `.wav` estéreo de 16-bit PCM (44.1 kHz).

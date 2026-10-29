@@ -77,7 +77,7 @@ graph TD
 
 ### 4. 🎵 Playlist Arranger & Offline WAV Export
 - **16-Bar Multi-Track Timeline**: 4 horizontal tracks to arrange and sequence pattern clips.
-- **Multi-Pattern Manager**: Switch between patterns or create new ones (`Pattern 1`, `Pattern 2`, etc.) via `< >` selectors and `+`.
+- **Pattern Manager & Inline Renaming**: Switch patterns easily, create new ones with `+`, or click/double-click the pattern name in the toolbar or playlist to rename it on the fly with real-time sync across the timeline.
 - **Dual Playback Modes (`[PAT]` / `[SONG]`)**: Loop the active pattern or play the entire song arrangement with a timeline playhead ruler.
 - **Demo Song Preset**: 1-click button to load a full demonstration track with Intro, Drop, and Outro sections.
 - **Master WAV Export**: High-speed offline rendering via `OfflineAudioContext` for 16-bit stereo PCM WAV (44.1 kHz) instant downloads.

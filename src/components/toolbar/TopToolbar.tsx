@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   Play, Square, Sliders, Music, Download, 
-  Grid, Plus, Layers, Sparkles, Loader2, Globe 
+  Grid, Plus, Layers, Sparkles, Loader2, Globe,
+  Pencil, ChevronDown, Check 
 } from 'lucide-react';
 import { useProjectStore } from '../../store/useProjectStore';
 import { useLanguageStore } from '../../store/useLanguageStore';
@@ -13,11 +14,58 @@ export const TopToolbar: React.FC = () => {
   const {
     bpm, isPlaying, playMode, activePatternId, patterns,
     activeWindow, setBpm, setPlayMode, setActivePatternId,
-    setActiveWindow, createNewPattern, loadDemoSong
+    setActiveWindow, createNewPattern, renamePattern, loadDemoSong
   } = useProjectStore();
 
   const { t, language, setLanguage } = useLanguageStore();
   const [isExporting, setIsExporting] = useState(false);
+  const [isEditingPatternName, setIsEditingPatternName] = useState(false);
+  const [patternNameInput, setPatternNameInput] = useState('');
+  const [showPatternDropdown, setShowPatternDropdown] = useState(false);
+  const patternInputRef = useRef<HTMLInputElement>(null);
+  const patternDropdownRef = useRef<HTMLDivElement>(null);
+
+  const currentPattern = patterns.find(p => p.id === activePatternId);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (patternDropdownRef.current && !patternDropdownRef.current.contains(e.target as Node)) {
+        setShowPatternDropdown(false);
+      }
+    };
+    if (showPatternDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showPatternDropdown]);
+
+  const handleStartRename = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setPatternNameInput(currentPattern?.name || `Pattern ${activePatternId}`);
+    setIsEditingPatternName(true);
+    setShowPatternDropdown(false);
+    setTimeout(() => {
+      patternInputRef.current?.focus();
+      patternInputRef.current?.select();
+    }, 40);
+  };
+
+  const handleSavePatternName = () => {
+    if (patternNameInput.trim()) {
+      renamePattern(activePatternId, patternNameInput.trim());
+    }
+    setIsEditingPatternName(false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSavePatternName();
+    } else if (e.key === 'Escape') {
+      setIsEditingPatternName(false);
+    }
+  };
 
   const handleTogglePlay = () => {
     if (isPlaying) {
@@ -114,22 +162,82 @@ export const TopToolbar: React.FC = () => {
           onChange={setBpm}
         />
 
-        {/* Pattern Selector */}
-        <div className="flex items-center gap-1 bg-fl-surface px-2 py-1 rounded border border-fl-border text-xs">
+        {/* Pattern Selector & Inline Renamer */}
+        <div ref={patternDropdownRef} className="relative flex items-center gap-1 bg-fl-surface px-2 py-1 rounded border border-fl-border text-xs">
           <span className="text-gray-400 text-[11px]">{t.pattern}:</span>
+          
+          {/* Navegar para pattern anterior */}
           <button 
             onClick={() => setActivePatternId(Math.max(1, activePatternId - 1))}
-            className="px-1 text-gray-400 hover:text-white font-bold"
+            className="px-1 text-gray-400 hover:text-white font-bold transition-colors disabled:opacity-30"
+            disabled={activePatternId <= 1}
+            title="Pattern anterior"
           >
             ‹
           </button>
-          <span className="font-mono text-fl-accent font-bold px-1">{t.pattern} {activePatternId}</span>
+
+          {/* Nome do Pattern com Edição Inline ou Botão com Ícone de Lápis */}
+          {isEditingPatternName ? (
+            <div className="flex items-center gap-1">
+              <input
+                ref={patternInputRef}
+                type="text"
+                value={patternNameInput}
+                onChange={(e) => setPatternNameInput(e.target.value)}
+                onBlur={handleSavePatternName}
+                onKeyDown={handleKeyDown}
+                className="bg-fl-bg text-fl-accent border border-fl-accent/60 rounded px-1.5 py-0.5 font-mono text-xs font-bold w-32 focus:outline-none focus:ring-1 focus:ring-fl-accent shadow-inner"
+                placeholder={currentPattern?.name || `Pattern ${activePatternId}`}
+                title={t.pressEnterToSave}
+              />
+              <button
+                onClick={handleSavePatternName}
+                className="p-0.5 text-fl-green hover:brightness-125"
+                title="Salvar"
+              >
+                <Check className="w-3 h-3" />
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-0.5">
+              <button
+                onClick={handleStartRename}
+                onDoubleClick={handleStartRename}
+                className="group flex items-center gap-1 font-mono text-fl-accent font-bold px-1.5 py-0.5 rounded hover:bg-fl-panel hover:text-white transition-all text-xs"
+                title={t.renamePatternTip}
+              >
+                <span 
+                  className="w-2 h-2 rounded-full shrink-0"
+                  style={{ backgroundColor: currentPattern?.color || '#ff851b' }}
+                />
+                <span className="truncate max-w-[110px]">
+                  {currentPattern?.name || `${t.pattern} ${activePatternId}`}
+                </span>
+                <Pencil className="w-2.5 h-2.5 opacity-40 group-hover:opacity-100 transition-opacity ml-0.5" />
+              </button>
+
+              {/* Botão de lista dropdown para alternar rapidamente entre patterns */}
+              <button
+                onClick={() => setShowPatternDropdown(!showPatternDropdown)}
+                className="p-0.5 text-gray-400 hover:text-white rounded hover:bg-fl-panel transition-all"
+                title={t.patternList}
+              >
+                <ChevronDown className="w-3 h-3" />
+              </button>
+            </div>
+          )}
+
+          {/* Navegar para próximo pattern */}
           <button 
             onClick={() => setActivePatternId(Math.min(patterns.length, activePatternId + 1))}
-            className="px-1 text-gray-400 hover:text-white font-bold"
+            className="px-1 text-gray-400 hover:text-white font-bold transition-colors disabled:opacity-30"
+            disabled={activePatternId >= patterns.length}
+            title="Próximo pattern"
           >
             ›
           </button>
+
+          {/* Criar novo pattern (+) */}
           <button
             onClick={createNewPattern}
             className="ml-1 p-0.5 text-gray-400 hover:text-fl-green transition-colors"
@@ -137,6 +245,64 @@ export const TopToolbar: React.FC = () => {
           >
             <Plus className="w-3 h-3" />
           </button>
+
+          {/* Menu Dropdown com todos os patterns cadastrados */}
+          {showPatternDropdown && (
+            <div className="absolute top-full left-0 mt-1.5 w-52 bg-fl-panel border border-fl-border rounded-lg shadow-2xl z-50 p-1 space-y-0.5 text-xs">
+              <div className="px-2 py-1 text-[10px] font-mono font-bold text-gray-400 uppercase tracking-wider border-b border-fl-border/40 flex items-center justify-between">
+                <span>{t.patternList}</span>
+                <span className="text-fl-accent font-mono text-[9px]">{patterns.length}</span>
+              </div>
+              <div className="max-h-48 overflow-y-auto space-y-0.5">
+                {patterns.map((p) => (
+                  <div
+                    key={p.id}
+                    className={`w-full px-2 py-1.5 rounded flex items-center justify-between transition-all group ${
+                      p.id === activePatternId
+                        ? 'bg-fl-accent text-white font-semibold'
+                        : 'hover:bg-fl-surface text-gray-300 hover:text-white'
+                    }`}
+                  >
+                    <button
+                      onClick={() => {
+                        setActivePatternId(p.id);
+                        setShowPatternDropdown(false);
+                      }}
+                      className="flex items-center gap-2 truncate flex-1 text-left"
+                    >
+                      <span 
+                        className="w-2 h-2 rounded-full shrink-0"
+                        style={{ backgroundColor: p.color || '#ff851b' }}
+                      />
+                      <span className="truncate">{p.name || `${t.pattern} ${p.id}`}</span>
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        setActivePatternId(p.id);
+                        handleStartRename(e);
+                      }}
+                      className="p-1 opacity-60 hover:opacity-100 transition-opacity ml-1 text-gray-300 hover:text-white"
+                      title={t.renamePattern}
+                    >
+                      <Pencil className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <div className="pt-1 border-t border-fl-border/40">
+                <button
+                  onClick={() => {
+                    createNewPattern();
+                    setShowPatternDropdown(false);
+                  }}
+                  className="w-full text-left px-2 py-1 rounded flex items-center gap-1.5 hover:bg-fl-surface text-fl-green transition-all font-mono text-[11px]"
+                >
+                  <Plus className="w-3 h-3" />
+                  <span>{t.newPattern}</span>
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

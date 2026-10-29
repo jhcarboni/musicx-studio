@@ -1,17 +1,37 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import { useProjectStore } from '../../store/useProjectStore';
 import { useLanguageStore } from '../../store/useLanguageStore';
-import { Layers, Sparkles, Info } from 'lucide-react';
+import { Layers, Sparkles, Info, Pencil, Check } from 'lucide-react';
 
 export const PlaylistArranger: React.FC = () => {
   const {
     playlistClips, togglePlaylistClip, patterns, activePatternId,
-    isPlaying, playMode, currentBar, setPlayMode, loadDemoSong
+    isPlaying, playMode, currentBar, setPlayMode, loadDemoSong, renamePattern
   } = useProjectStore();
 
   const { t } = useLanguageStore();
   const currentPattern = patterns.find(p => p.id === activePatternId);
   const trackNames = [t.trackDrums, t.trackSnare, t.trackHats, t.trackMelody];
+
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [nameInput, setNameInput] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleStartRename = () => {
+    setNameInput(currentPattern?.name || `Pattern ${activePatternId}`);
+    setIsEditingName(true);
+    setTimeout(() => {
+      inputRef.current?.focus();
+      inputRef.current?.select();
+    }, 40);
+  };
+
+  const handleSaveRename = () => {
+    if (nameInput.trim()) {
+      renamePattern(activePatternId, nameInput.trim());
+    }
+    setIsEditingName(false);
+  };
 
   return (
     <div className="bg-fl-panel border border-fl-border rounded-xl shadow-2xl overflow-hidden flex flex-col select-none">
@@ -26,13 +46,38 @@ export const PlaylistArranger: React.FC = () => {
           {/* Active Pattern Clip Indicator */}
           <div className="flex items-center gap-2 bg-fl-bg px-2.5 py-1 rounded border border-fl-border text-xs">
             <span className="text-gray-400 text-[11px]">{t.activeBrush}:</span>
-            <div className="flex items-center gap-1.5 font-mono font-bold text-white">
-              <span 
-                className="w-2.5 h-2.5 rounded-full" 
-                style={{ backgroundColor: currentPattern?.color || '#ff851b' }} 
-              />
-              <span className="text-fl-accent">{currentPattern?.name || `${t.pattern} ${activePatternId}`}</span>
-            </div>
+            {isEditingName ? (
+              <div className="flex items-center gap-1 font-mono">
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={nameInput}
+                  onChange={(e) => setNameInput(e.target.value)}
+                  onBlur={handleSaveRename}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleSaveRename();
+                    if (e.key === 'Escape') setIsEditingName(false);
+                  }}
+                  className="bg-fl-surface text-fl-accent border border-fl-accent/60 rounded px-1.5 py-0.5 text-xs font-bold w-28 focus:outline-none focus:ring-1 focus:ring-fl-accent"
+                />
+                <button onClick={handleSaveRename} className="text-fl-green hover:brightness-125" title="Salvar">
+                  <Check className="w-3 h-3" />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={handleStartRename}
+                className="group flex items-center gap-1.5 font-mono font-bold text-white hover:text-fl-accent transition-colors"
+                title={t.renamePatternTip}
+              >
+                <span 
+                  className="w-2.5 h-2.5 rounded-full shrink-0" 
+                  style={{ backgroundColor: currentPattern?.color || '#ff851b' }} 
+                />
+                <span className="text-fl-accent">{currentPattern?.name || `${t.pattern} ${activePatternId}`}</span>
+                <Pencil className="w-2.5 h-2.5 opacity-40 group-hover:opacity-100 transition-opacity" />
+              </button>
+            )}
           </div>
         </div>
 

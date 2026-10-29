@@ -36,6 +36,7 @@ interface ProjectState {
   setCustomSoundFont: (channelId: string, sfId: string, name: string) => void;
   resetChannelToSynth: (channelId: string) => void;
   createNewPattern: () => void;
+  renamePattern: (id: number, name: string) => void;
   addNote: (channelId: string, note: Note) => void;
   removeNote: (channelId: string, midi: number, step: number) => void;
   togglePlaylistClip: (trackIdx: number, bar: number) => void;
@@ -288,6 +289,16 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     };
     set({ patterns: [...patterns, newPattern] });
     get().setActivePatternId(newId);
+  },
+
+  renamePattern: (id: number, name: string) => {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    set((state) => ({
+      patterns: state.patterns.map((p) =>
+        p.id === id ? { ...p, name: trimmed } : p
+      )
+    }));
   },
 
   addNote: (channelId, note) => set((state) => ({

@@ -52,10 +52,8 @@ export const PianoRoll: React.FC = () => {
   const handleKeyPreview = (midi: number) => {
     audioEngine.init();
     if (!audioEngine.ctx) return;
-    const now = audioEngine.ctx.currentTime;
-    const freq = midiToFreq(midi);
     const durSec = noteDuration * (60.0 / bpm / 4);
-    audioEngine.playSynthNote(now, freq, durSec, activeChannel.vol * 0.9, activeChannel.trackIdx);
+    audioEngine.playNotePreview(activeChannel, midi, durSec, activeChannel.vol * 0.9);
   };
 
   const handleCellClick = (midi: number, name: string, step: number) => {

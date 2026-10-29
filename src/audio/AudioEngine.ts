@@ -1,5 +1,6 @@
 import { useProjectStore } from '../store/useProjectStore';
 import { useMixerStore } from '../store/useMixerStore';
+import { soundFontManager } from './SoundFontManager';
 
 interface MixerChannelNodes {
   input: GainNode;
@@ -462,7 +463,43 @@ export class AudioEngine {
     }, Math.max(0, (time - this.ctx!.currentTime) * 1000));
   }
 
+  public playNotePreview(channel: any, midi: number, duration: number = 0.5, velocity: number = 0.8) {
+    this.init();
+    if (!this.ctx) return;
+    if (this.ctx.state === 'suspended') {
+      this.ctx.resume();
+    }
+    const dest = this.getChannelInput(channel.trackIdx) || this.masterGain!;
+    const now = this.ctx.currentTime;
+
+    if (channel.instrumentType === 'soundfont' || channel.instrumentType === 'custom_sf2') {
+      soundFontManager.playNote(channel, midi, now, duration, velocity * channel.vol, dest, this.ctx);
+    } else {
+      const freq = 440 * Math.pow(2, (midi - 69) / 12);
+      this.playSynthNote(now, freq, duration, velocity * channel.vol, channel.trackIdx);
+    }
+  }
+
   private triggerChannelSound(ch: any, time: number, vel: number, step: number) {
+    const dest = this.getChannelInput(ch.trackIdx) || this.masterGain!;
+
+    // 1. Toca instrumento SoundFont (.sf2 ou Presets como Piano, Rhodes, Strings, Bass)
+    if (ch.instrumentType === 'soundfont' || ch.instrumentType === 'custom_sf2') {
+      const notesAtStep = ch.notes?.filter((n: any) => n.step === step);
+      if (notesAtStep && notesAtStep.length > 0) {
+        notesAtStep.forEach((note: any) => {
+          const noteDurationSec = note.duration * (60.0 / useProjectStore.getState().bpm / 4);
+          soundFontManager.playNote(ch, note.midi, time, noteDurationSec, note.velocity * ch.vol, dest, this.ctx!);
+        });
+      } else {
+        // Disparo via Step Sequencer: toca nota padrão C4 (MIDI 60)
+        const noteDurationSec = 60.0 / useProjectStore.getState().bpm / 4;
+        soundFontManager.playNote(ch, 60, time, noteDurationSec, vel, dest, this.ctx!);
+      }
+      return;
+    }
+
+    // 2. Samples customizados soltos (.wav/.mp3)
     if (ch.customBuffer) {
       this.playCustomBuffer(time, ch.customBuffer, vel, ch.trackIdx);
     } else if (ch.id === 'kick') {
@@ -475,7 +512,7 @@ export class AudioEngine {
       this.playClap(time, vel, ch.trackIdx);
     }
 
-    // Toca notas do piano roll se houver
+    // Toca notas do piano roll se houver para sintetizador analógico
     if (ch.notes && ch.notes.length > 0) {
       const notesAtStep = ch.notes.filter((n: any) => n.step === step);
       notesAtStep.forEach((note: any) => {

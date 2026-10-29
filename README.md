@@ -50,6 +50,15 @@ graph TD
 ### 1. 🎛️ Channel Rack & Sequenciador de Passos
 - **Sequenciador de 16 passos**: agrupamento rítmico clássico de 4 em 4 tempos em cores contrastantes (`fl-step-off-a` e `fl-step-off-b`).
 - **Knobs Rotatórios Táteis (`<RotaryKnob />`)**: controle de volume e panorâmica com captura de ponteiro e arraste vertical suave. Suporte a modo bipolar (Pan) e duplo clique para resetar ao valor padrão.
+- **Seletor de Instrumentos & SoundFonts Nativos**: alterne instantaneamente qualquer canal entre bateria analógica e instrumentos acústicos/amostrados reais:
+  - 🎹 **Acoustic Grand Piano** (Piano de cauda acústico)
+  - 🎹 **Rhodes Electric Piano** (Piano elétrico clássico)
+  - 🎸 **Electric Bass (Finger)** (Baixo elétrico dedilhado)
+  - 🎻 **String Ensemble / Violins** (Seção de cordas e violinos orquestrais)
+  - 🎸 **Nylon Acoustic Guitar** (Violão de nylon)
+  - 🎺 **80s Synth Brass** (Metais sintetizados retrô)
+  - 🪈 **Orchestral Flute** (Flauta orquestral)
+- **Suporte a Arquivos SoundFont 2 (`.sf2`) Customizados**: arraste e solte qualquer arquivo de instrumento `.sf2` diretamente no canal para decodificação instantânea de amostras PCM e reprodução realista.
 - **Drag & Drop de Samples de Áudio**: arraste qualquer arquivo `.wav` ou `.mp3` do seu computador diretamente para a linha de qualquer canal para decodificá-lo e tocá-lo na hora.
 - **Controle de Swing Groove**: ajuste de shuffle de 0% a 100% que atrasa os passos pares de semicolcheia com compensação temporal contínua.
 
@@ -91,6 +100,8 @@ Todo o áudio nativo é gerado matematicamente em tempo real:
 | **HiHat Clsd** | In 3 | 6 Osciladores Quadrados + Filtros Passa-Banda e Alta | Razões harmônicas clássicas (808) processadas por passa-banda (10 kHz) e passa-alta (7.5 kHz). |
 | **Clap 909** | In 4 | Ruído Branco em Micro-Bursts + Passa-Banda | 3 rajadas consecutivas espaçadas em ~11ms seguidas de cauda reverberada cortada em 1200 Hz ($Q=2$). |
 | **Synth Melódico**| Dinâmico | Oscilador Dente de Serra (Sawtooth) + ADSR | Síntese subtrativa polifônica afinada por fórmula MIDI ($f = 440 \times 2^{(midi-69)/12}$). |
+| **SoundFonts GM** | Qualquer | Bancos Amostrados de Alta Definição (MusyngKite) | Multi-samples acústicos estéreo com resposta tátil de dinâmica e sustentação harmônica. |
+| **SoundFont 2 (.sf2)** | Qualquer | Decodificador RIFF/SFBK PCM 16-bit | Parser de chunks com re-amostragem dinâmica de playback rate por semitons. |
 | **Custom Audio** | Qualquer | `AudioBufferSourceNode` nativo | Decodificação em memória via `AudioContext.decodeAudioData()`. |
 
 ---

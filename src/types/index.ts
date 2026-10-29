@@ -10,6 +10,8 @@ export interface Note {
   velocity: number; // 0.0 to 1.0
 }
 
+export type InstrumentType = 'synth' | 'soundfont' | 'custom_sf2';
+
 export interface Channel {
   id: string;
   name: string;
@@ -20,6 +22,9 @@ export interface Channel {
   trackIdx: number; // 1 to 4 (Mixer track index)
   color?: string;
   customBuffer: AudioBuffer | null;
+  instrumentType?: InstrumentType;
+  soundfontPreset?: string;
+  soundfontLoaded?: boolean;
   pattern: number[]; // 16 steps: 0 or 1
   velocities: number[]; // 16 steps: 0.0 to 1.0
   notes: Note[];

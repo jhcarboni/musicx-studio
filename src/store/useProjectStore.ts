@@ -32,6 +32,9 @@ interface ProjectState {
   toggleChannelMute: (channelId: string) => void;
   toggleChannelSolo: (channelId: string) => void;
   setCustomBuffer: (channelId: string, buffer: AudioBuffer, name: string) => void;
+  setChannelSoundFont: (channelId: string, presetId: string, presetName: string) => void;
+  setCustomSoundFont: (channelId: string, sfId: string, name: string) => void;
+  resetChannelToSynth: (channelId: string) => void;
   createNewPattern: () => void;
   addNote: (channelId: string, note: Note) => void;
   removeNote: (channelId: string, midi: number, step: number) => void;
@@ -223,8 +226,55 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   }),
 
   setCustomBuffer: (channelId, buffer, name) => set((state) => ({
-    channels: state.channels.map(ch => ch.id === channelId ? { ...ch, customBuffer: buffer, name } : ch)
+    channels: state.channels.map(ch => ch.id === channelId ? {
+      ...ch,
+      customBuffer: buffer,
+      name,
+      instrumentType: undefined,
+      soundfontPreset: undefined
+    } : ch)
   })),
+
+  setChannelSoundFont: (channelId, presetId, presetName) => set((state) => ({
+    channels: state.channels.map(ch => ch.id === channelId ? {
+      ...ch,
+      instrumentType: 'soundfont',
+      soundfontPreset: presetId,
+      soundfontLoaded: true,
+      name: presetName,
+      customBuffer: null
+    } : ch)
+  })),
+
+  setCustomSoundFont: (channelId, sfId, name) => set((state) => ({
+    channels: state.channels.map(ch => ch.id === channelId ? {
+      ...ch,
+      instrumentType: 'custom_sf2',
+      soundfontPreset: sfId,
+      soundfontLoaded: true,
+      name,
+      customBuffer: null
+    } : ch)
+  })),
+
+  resetChannelToSynth: (channelId) => set((state) => {
+    const defaultNames: Record<string, string> = {
+      kick: 'Kick 808',
+      snare: 'Snare Hard',
+      hihat: 'HiHat Clsd',
+      clap: 'Clap 909'
+    };
+    return {
+      channels: state.channels.map(ch => ch.id === channelId ? {
+        ...ch,
+        instrumentType: 'synth',
+        soundfontPreset: undefined,
+        soundfontLoaded: false,
+        name: defaultNames[ch.id] || ch.name,
+        customBuffer: null
+      } : ch)
+    };
+  }),
 
   createNewPattern: () => {
     const { patterns } = get();

@@ -50,6 +50,15 @@ graph TD
 ### 1. 🎛️ Channel Rack & Step Sequencer
 - **16-Step Grid**: Classic 4/4 rhythm grouping with alternating beat block colors (`fl-step-off-a` and `fl-step-off-b`).
 - **Tactile Rotary Knobs (`<RotaryKnob />`)**: Smooth vertical dragging with pointer capture, fine sensitivity, bipolar support (Pan), and double-click to reset.
+- **Instrument Selector & General MIDI SoundFonts**: Instantly switch any channel between analog drum synthesizers and real sampled/acoustic instruments:
+  - 🎹 **Acoustic Grand Piano**
+  - 🎹 **Rhodes Electric Piano**
+  - 🎸 **Electric Bass (Finger)**
+  - 🎻 **String Ensemble / Violins**
+  - 🎸 **Nylon Acoustic Guitar**
+  - 🎺 **80s Synth Brass**
+  - 🪈 **Orchestral Flute**
+- **Custom SoundFont 2 (`.sf2`) Support**: Drag and drop any `.sf2` instrument file onto any channel row for instantaneous PCM sample decoding and pitch-tracked playback.
 - **Audio Sample Drag & Drop**: Drag `.wav` or `.mp3` audio files directly from your desktop onto any channel row to decode and play them instantly.
 - **Swing / Groove Control**: Global shuffle timing slider (0% to 100%) dynamically adjusting odd 16th-note timings.
 
@@ -91,6 +100,8 @@ All native sounds are generated mathematically in real time:
 | **HiHat Clsd** | In 3 | 6 Square Oscillators + Bandpass/Highpass Filters | Classic 808 metallic ratios routed through band-pass (10 kHz) and high-pass (7.5 kHz). |
 | **Clap 909** | In 4 | White Noise Micro-Bursts + Bandpass Filter | 3 consecutive bursts spaced by ~11ms followed by a decay tail centered at 1200 Hz ($Q=2$). |
 | **Melodic Synth**| Dynamic | Sawtooth Wave + Polyphonic ADSR Envelope | Subtractive synthesis tuned via standard MIDI pitch formula ($f = 440 \times 2^{(midi-69)/12}$). |
+| **SoundFonts GM** | Any | High-Definition Sampled SoundFont Banks (MusyngKite) | Multi-sampled acoustic stereo audio with velocity dynamics and authentic decay. |
+| **SoundFont 2 (.sf2)** | Any | RIFF/SFBK 16-bit PCM Sample Decoder | Zero-dependency chunk parser with dynamic playback rate pitch-shifting. |
 | **Custom Audio** | Any | Native `AudioBufferSourceNode` | Decoded on the fly via `AudioContext.decodeAudioData()`. |
 
 ---

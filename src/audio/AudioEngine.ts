@@ -75,8 +75,8 @@ export class AudioEngine {
     // Initialize Shared Effects
     this.initEffects();
 
-    // Initialize Mixer Inserts 1 to 4
-    for (let i = 1; i <= 4; i++) {
+    // Initialize Mixer Inserts 1 to 16
+    for (let i = 1; i <= 16; i++) {
       this.initMixerChannel(i);
     }
   }
@@ -175,6 +175,9 @@ export class AudioEngine {
 
   public getChannelInput(trackIdx: number): GainNode | null {
     this.init();
+    if (!this.mixerNodes.has(trackIdx)) {
+      this.initMixerChannel(trackIdx);
+    }
     const nodes = this.mixerNodes.get(trackIdx);
     return nodes ? nodes.input : this.masterGain;
   }
@@ -474,6 +477,14 @@ export class AudioEngine {
 
     if (channel.instrumentType === 'soundfont' || channel.instrumentType === 'custom_sf2') {
       soundFontManager.playNote(channel, midi, now, duration, velocity * channel.vol, dest, this.ctx);
+    } else if (channel.synthSound === 'kick' || channel.id === 'kick') {
+      this.playKick(now, velocity * channel.vol, channel.trackIdx);
+    } else if (channel.synthSound === 'snare' || channel.id === 'snare') {
+      this.playSnare(now, velocity * channel.vol, channel.trackIdx);
+    } else if (channel.synthSound === 'hihat' || channel.id === 'hihat') {
+      this.playHiHat(now, velocity * channel.vol, channel.trackIdx);
+    } else if (channel.synthSound === 'clap' || channel.id === 'clap') {
+      this.playClap(now, velocity * channel.vol, channel.trackIdx);
     } else {
       const freq = 440 * Math.pow(2, (midi - 69) / 12);
       this.playSynthNote(now, freq, duration, velocity * channel.vol, channel.trackIdx);
@@ -502,14 +513,17 @@ export class AudioEngine {
     // 2. Samples customizados soltos (.wav/.mp3)
     if (ch.customBuffer) {
       this.playCustomBuffer(time, ch.customBuffer, vel, ch.trackIdx);
-    } else if (ch.id === 'kick') {
+    } else if (ch.synthSound === 'kick' || ch.id === 'kick' || ch.id.startsWith('kick')) {
       this.playKick(time, vel, ch.trackIdx);
-    } else if (ch.id === 'snare') {
+    } else if (ch.synthSound === 'snare' || ch.id === 'snare' || ch.id.startsWith('snare')) {
       this.playSnare(time, vel, ch.trackIdx);
-    } else if (ch.id === 'hihat') {
+    } else if (ch.synthSound === 'hihat' || ch.id === 'hihat' || ch.id.startsWith('hihat')) {
       this.playHiHat(time, vel, ch.trackIdx);
-    } else if (ch.id === 'clap') {
+    } else if (ch.synthSound === 'clap' || ch.id === 'clap' || ch.id.startsWith('clap')) {
       this.playClap(time, vel, ch.trackIdx);
+    } else {
+      const noteDurationSec = 60.0 / useProjectStore.getState().bpm / 4;
+      this.playSynthNote(time, 261.63, noteDurationSec, vel, ch.trackIdx);
     }
 
     // Toca notas do piano roll se houver para sintetizador analógico

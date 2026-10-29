@@ -12,6 +12,7 @@ interface MixerState {
   toggleTrackSolo: (trackId: number) => void;
   setEq: (trackId: number, band: 'eqLow' | 'eqMid' | 'eqHigh', val: number) => void;
   setSend: (trackId: number, effect: 'revSend' | 'delSend' | 'distSend', val: number) => void;
+  setTrackName: (trackId: number, name: string) => void;
   selectTrack: (trackId: number) => void;
 }
 
@@ -85,12 +86,30 @@ const DEFAULT_TRACKS: MixerTrack[] = [
     revSend: 0.35,
     delSend: 0.15,
     distSend: 0.1
-  }
+  },
+  ...Array.from({ length: 12 }, (_, i) => ({
+    id: i + 5,
+    name: `Insert ${i + 5}`,
+    vol: 0.8,
+    pan: 0,
+    muted: false,
+    solo: false,
+    eqLow: 0,
+    eqMid: 0,
+    eqHigh: 0,
+    revSend: 0.1,
+    delSend: 0,
+    distSend: 0
+  }))
 ];
 
 export const useMixerStore = create<MixerState>((set) => ({
   tracks: DEFAULT_TRACKS,
   selectedTrackId: 0,
+
+  setTrackName: (trackId, name) => set((state) => ({
+    tracks: state.tracks.map(t => t.id === trackId ? { ...t, name } : t)
+  })),
 
   setTrackVol: (trackId, vol) => set((state) => ({
     tracks: state.tracks.map(t => t.id === trackId ? { ...t, vol: Math.max(0, Math.min(1.2, vol)) } : t)

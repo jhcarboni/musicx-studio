@@ -49,14 +49,16 @@ export async function exportSongToWAV(totalBars: number = 16): Promise<Blob> {
               src.connect(g);
               g.connect(masterGain);
               src.start(stepTime);
-            } else if (ch.id === 'kick') {
+            } else if (ch.synthSound === 'kick' || ch.id === 'kick' || ch.id.startsWith('kick')) {
               renderOfflineKick(offlineCtx, masterGain, stepTime, vel);
-            } else if (ch.id === 'snare') {
+            } else if (ch.synthSound === 'snare' || ch.id === 'snare' || ch.id.startsWith('snare')) {
               renderOfflineSnare(offlineCtx, masterGain, stepTime, vel);
-            } else if (ch.id === 'hihat') {
+            } else if (ch.synthSound === 'hihat' || ch.id === 'hihat' || ch.id.startsWith('hihat')) {
               renderOfflineHiHat(offlineCtx, masterGain, stepTime, vel);
-            } else if (ch.id === 'clap') {
+            } else if (ch.synthSound === 'clap' || ch.id === 'clap' || ch.id.startsWith('clap')) {
               renderOfflineClap(offlineCtx, masterGain, stepTime, vel);
+            } else {
+              renderOfflineSnare(offlineCtx, masterGain, stepTime, vel * 0.5);
             }
           }
         }

@@ -5,7 +5,7 @@ import { useProjectStore } from '../../store/useProjectStore';
 import { useLanguageStore } from '../../store/useLanguageStore';
 import { audioEngine } from '../../audio/AudioEngine';
 import { soundFontManager, SOUNDFONT_PRESETS } from '../../audio/SoundFontManager';
-import { Upload, Music2, ChevronDown, Loader2, Sparkles, FolderUp, RefreshCw } from 'lucide-react';
+import { Upload, Music2, ChevronDown, Loader2, FolderUp, RefreshCw, Trash2, Pencil, Check } from 'lucide-react';
 
 interface ChannelRowProps {
   channel: Channel;
@@ -13,18 +13,22 @@ interface ChannelRowProps {
 
 export const ChannelRow: React.FC<ChannelRowProps> = ({ channel }) => {
   const { 
-    isPlaying, currentStep, activeChannelId,
+    isPlaying, currentStep, activeChannelId, channels,
     toggleStep, setChannelVol, setChannelPan,
     toggleChannelMute, toggleChannelSolo,
     setCustomBuffer, setChannelSoundFont, setCustomSoundFont,
-    resetChannelToSynth, setActiveChannelId, setActiveWindow
+    resetChannelToSynth, setActiveChannelId, setActiveWindow,
+    removeChannel, renameChannel
   } = useProjectStore();
 
   const { t } = useLanguageStore();
   const [isDragOver, setIsDragOver] = useState(false);
   const [showInstrumentMenu, setShowInstrumentMenu] = useState(false);
   const [isLoadingInstrument, setIsLoadingInstrument] = useState(false);
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editName, setEditName] = useState(channel.name);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const nameInputRef = useRef<HTMLInputElement | null>(null);
 
   // Preview sound on channel name click
   const handlePreviewSound = () => {
@@ -38,15 +42,34 @@ export const ChannelRow: React.FC<ChannelRowProps> = ({ channel }) => {
       audioEngine.playNotePreview(channel, 60, 0.5, vel);
     } else if (channel.customBuffer) {
       audioEngine.playCustomBuffer(now, channel.customBuffer, vel, channel.trackIdx);
-    } else if (channel.id === 'kick') {
+    } else if (channel.synthSound === 'kick' || channel.id === 'kick' || channel.id.startsWith('kick')) {
       audioEngine.playKick(now, vel, channel.trackIdx);
-    } else if (channel.id === 'snare') {
+    } else if (channel.synthSound === 'snare' || channel.id === 'snare' || channel.id.startsWith('snare')) {
       audioEngine.playSnare(now, vel, channel.trackIdx);
-    } else if (channel.id === 'hihat') {
+    } else if (channel.synthSound === 'hihat' || channel.id === 'hihat' || channel.id.startsWith('hihat')) {
       audioEngine.playHiHat(now, vel, channel.trackIdx);
-    } else if (channel.id === 'clap') {
+    } else if (channel.synthSound === 'clap' || channel.id === 'clap' || channel.id.startsWith('clap')) {
       audioEngine.playClap(now, vel, channel.trackIdx);
+    } else {
+      audioEngine.playSynthNote(now, 261.63, 0.3, vel, channel.trackIdx);
     }
+  };
+
+  const handleStartRename = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditName(channel.name);
+    setIsEditingName(true);
+    setTimeout(() => {
+      nameInputRef.current?.focus();
+      nameInputRef.current?.select();
+    }, 40);
+  };
+
+  const handleSaveRename = () => {
+    if (editName.trim()) {
+      renameChannel(channel.id, editName.trim());
+    }
+    setIsEditingName(false);
   };
 
   // Select SoundFont Preset
@@ -176,9 +199,20 @@ export const ChannelRow: React.FC<ChannelRowProps> = ({ channel }) => {
       )}
 
       {/* Lado Esquerdo: Controles do Canal */}
-      <div className="w-64 shrink-0 flex items-center justify-between bg-fl-surface px-2.5 py-1.5 rounded-md border border-fl-border relative">
-        {/* Mute, Solo & Name */}
+      <div className="w-68 shrink-0 flex items-center justify-between bg-fl-surface px-2.5 py-1.5 rounded-md border border-fl-border relative">
+        {/* Mute, Solo, Delete & Name */}
         <div className="flex items-center gap-1.5 overflow-hidden">
+          {/* Botão de Excluir Canal (habilitado quando > 1 canal) */}
+          {channels.length > 1 && (
+            <button
+              onClick={() => removeChannel(channel.id)}
+              className="w-5 h-5 rounded text-[10px] font-mono font-bold transition-all shrink-0 bg-fl-panel text-gray-500 hover:text-fl-red hover:bg-fl-red/20 flex items-center justify-center"
+              title={t.deleteChannel}
+            >
+              <Trash2 className="w-2.5 h-2.5" />
+            </button>
+          )}
+
           <button
             onClick={() => toggleChannelMute(channel.id)}
             className={`w-5 h-5 rounded text-[10px] font-mono font-bold transition-all shrink-0 ${
@@ -202,34 +236,67 @@ export const ChannelRow: React.FC<ChannelRowProps> = ({ channel }) => {
             S
           </button>
 
-          {/* Nome do Canal & Seletor de Instrumento SoundFont */}
-          <div className="flex items-center gap-1 overflow-hidden">
-            <button
-              onClick={() => setShowInstrumentMenu(!showInstrumentMenu)}
-              className="p-1 rounded bg-fl-panel hover:bg-fl-border text-gray-400 hover:text-fl-accent transition-all flex items-center gap-0.5 text-[11px]"
-              title={t.selectInstrument}
-            >
-              {isLoadingInstrument ? (
-                <Loader2 className="w-3 h-3 text-fl-accent animate-spin" />
-              ) : isSoundFont ? (
-                <span className="text-xs">🎹</span>
-              ) : (
-                <span className="text-xs">🥁</span>
-              )}
-              <ChevronDown className="w-2.5 h-2.5 opacity-60" />
-            </button>
+          {/* Seletor de Instrumento SoundFont */}
+          <button
+            onClick={() => setShowInstrumentMenu(!showInstrumentMenu)}
+            className="p-1 rounded bg-fl-panel hover:bg-fl-border text-gray-400 hover:text-fl-accent transition-all flex items-center gap-0.5 text-[11px] shrink-0"
+            title={t.selectInstrument}
+          >
+            {isLoadingInstrument ? (
+              <Loader2 className="w-3 h-3 text-fl-accent animate-spin" />
+            ) : isSoundFont ? (
+              <span className="text-xs">🎹</span>
+            ) : (
+              <span className="text-xs">🥁</span>
+            )}
+            <ChevronDown className="w-2.5 h-2.5 opacity-60" />
+          </button>
 
-            <button
-              onClick={handlePreviewSound}
-              className="flex items-center gap-1 text-left text-xs font-semibold text-white hover:text-fl-accent transition-colors truncate max-w-[95px]"
-              title={`${channel.name} — ${t.previewSound}`}
-            >
-              <span 
-                className="w-1.5 h-3 rounded-full shrink-0" 
-                style={{ backgroundColor: channel.color || '#ff851b' }} 
-              />
-              <span className="truncate">{channel.name}</span>
-            </button>
+          {/* Nome do Canal com Inline Rename & Audition */}
+          <div className="flex items-center gap-1 overflow-hidden">
+            {isEditingName ? (
+              <div className="flex items-center gap-1 font-mono">
+                <input
+                  ref={nameInputRef}
+                  type="text"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  onBlur={handleSaveRename}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleSaveRename();
+                    if (e.key === 'Escape') setIsEditingName(false);
+                  }}
+                  className="bg-fl-bg text-fl-accent border border-fl-accent/60 rounded px-1.5 py-0.5 text-xs font-bold w-20 focus:outline-none focus:ring-1 focus:ring-fl-accent"
+                />
+                <button onClick={handleSaveRename} className="text-fl-green hover:brightness-125" title="Salvar">
+                  <Check className="w-2.5 h-2.5" />
+                </button>
+              </div>
+            ) : (
+              <div className="group flex items-center gap-1">
+                <button
+                  onClick={() => {
+                    setActiveChannelId(channel.id);
+                    handlePreviewSound();
+                  }}
+                  className="flex items-center gap-1 text-left text-xs font-semibold text-white hover:text-fl-accent transition-colors truncate max-w-[80px]"
+                  title={`${channel.name} — ${t.previewSound}`}
+                >
+                  <span 
+                    className="w-1.5 h-3 rounded-full shrink-0" 
+                    style={{ backgroundColor: channel.color || '#ff851b' }} 
+                  />
+                  <span className="truncate">{channel.name}</span>
+                </button>
+                <button
+                  onClick={handleStartRename}
+                  className="opacity-0 group-hover:opacity-100 text-gray-500 hover:text-fl-accent transition-opacity p-0.5 rounded shrink-0"
+                  title={t.renameChannel}
+                >
+                  <Pencil className="w-2.5 h-2.5" />
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
@@ -289,13 +356,13 @@ export const ChannelRow: React.FC<ChannelRowProps> = ({ channel }) => {
         )}
 
         {/* Knobs de Volume e Pan + Atalho Piano Roll */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           <RotaryKnob
             value={channel.vol}
             min={0}
             max={1}
             defaultValue={0.8}
-            size={24}
+            size={22}
             label={t.vol}
             color="#ff851b"
             onChange={(v) => setChannelVol(channel.id, v)}
@@ -305,7 +372,7 @@ export const ChannelRow: React.FC<ChannelRowProps> = ({ channel }) => {
             min={-1}
             max={1}
             defaultValue={0}
-            size={24}
+            size={22}
             label={t.pan}
             bipolar={true}
             color="#3b82f6"

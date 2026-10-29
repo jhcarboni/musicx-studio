@@ -12,6 +12,8 @@ export interface Note {
 
 export type InstrumentType = 'synth' | 'soundfont' | 'custom_sf2';
 
+export type SynthSound = 'kick' | 'snare' | 'hihat' | 'clap' | 'synth';
+
 export interface Channel {
   id: string;
   name: string;
@@ -19,12 +21,13 @@ export interface Channel {
   pan: number; // -1.0 to 1.0
   muted: boolean;
   solo: boolean;
-  trackIdx: number; // 1 to 4 (Mixer track index)
+  trackIdx: number; // 1 to 16 (Mixer track index)
   color?: string;
   customBuffer: AudioBuffer | null;
   instrumentType?: InstrumentType;
   soundfontPreset?: string;
   soundfontLoaded?: boolean;
+  synthSound?: SynthSound;
   pattern: number[]; // 16 steps: 0 or 1
   velocities: number[]; // 16 steps: 0.0 to 1.0
   notes: Note[];
@@ -45,7 +48,7 @@ export interface Pattern {
 
 export interface PlaylistClip {
   id: string;
-  trackIdx: number; // 0 to 3
+  trackIdx: number; // 0 to 15
   bar: number;      // 0 to 15
   lengthBars: number;
   patternId: number;
@@ -53,7 +56,7 @@ export interface PlaylistClip {
 }
 
 export interface MixerTrack {
-  id: number; // 0: Master, 1-4: Inserts
+  id: number; // 0: Master, 1-16: Inserts
   name: string;
   vol: number; // 0.0 to 1.2
   pan: number; // -1.0 to 1.0

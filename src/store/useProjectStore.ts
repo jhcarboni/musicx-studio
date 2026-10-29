@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import { Channel, Pattern, PlaylistClip, Note, PlayMode, ActiveWindow } from '../types';
+import { Channel, Pattern, PlaylistClip, Note, PlayMode, ActiveWindow, InstrumentType, SynthSound } from '../types';
+import { useMixerStore } from './useMixerStore';
 
 interface ProjectState {
   bpm: number;
@@ -37,6 +38,14 @@ interface ProjectState {
   resetChannelToSynth: (channelId: string) => void;
   createNewPattern: () => void;
   renamePattern: (id: number, name: string) => void;
+  addChannel: (options?: {
+    name?: string;
+    instrumentType?: InstrumentType;
+    presetId?: string;
+    synthSound?: SynthSound;
+  }) => void;
+  removeChannel: (channelId: string) => void;
+  renameChannel: (channelId: string, name: string) => void;
   addNote: (channelId: string, note: Note) => void;
   removeNote: (channelId: string, midi: number, step: number) => void;
   togglePlaylistClip: (trackIdx: number, bar: number) => void;
@@ -53,6 +62,7 @@ const DEFAULT_CHANNELS: Channel[] = [
     solo: false,
     trackIdx: 1,
     color: '#ff851b',
+    synthSound: 'kick',
     customBuffer: null,
     velocities: [0.95, 0.70, 0.70, 0.70, 0.95, 0.70, 0.70, 0.70, 0.95, 0.70, 0.70, 0.70, 0.95, 0.70, 0.70, 0.70],
     pattern: [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0],
@@ -67,6 +77,7 @@ const DEFAULT_CHANNELS: Channel[] = [
     solo: false,
     trackIdx: 2,
     color: '#3b82f6',
+    synthSound: 'snare',
     customBuffer: null,
     velocities: [0.70, 0.70, 0.70, 0.70, 0.90, 0.70, 0.70, 0.70, 0.70, 0.70, 0.70, 0.70, 0.90, 0.70, 0.70, 0.70],
     pattern: [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
@@ -81,6 +92,7 @@ const DEFAULT_CHANNELS: Channel[] = [
     solo: false,
     trackIdx: 3,
     color: '#00ffcc',
+    synthSound: 'hihat',
     customBuffer: null,
     velocities: [0.80, 0.50, 0.70, 0.50, 0.80, 0.50, 0.70, 0.50, 0.80, 0.50, 0.70, 0.50, 0.80, 0.50, 0.70, 0.50],
     pattern: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
@@ -95,6 +107,7 @@ const DEFAULT_CHANNELS: Channel[] = [
     solo: false,
     trackIdx: 4,
     color: '#a855f7',
+    synthSound: 'clap',
     customBuffer: null,
     velocities: [0.70, 0.70, 0.70, 0.70, 0.70, 0.70, 0.70, 0.70, 0.70, 0.70, 0.70, 0.70, 0.85, 0.70, 0.70, 0.70],
     pattern: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
@@ -174,7 +187,12 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
             notes: [...saved.notes]
           };
         }
-        return ch;
+        return {
+          ...ch,
+          pattern: Array(16).fill(0),
+          velocities: Array(16).fill(0.8),
+          notes: []
+        };
       });
       set({ activePatternId: id, patterns: updatedPatterns, channels: updatedChannels });
     } else {
@@ -299,6 +317,107 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
         p.id === id ? { ...p, name: trimmed } : p
       )
     }));
+  },
+
+  addChannel: (options = {}) => {
+    const { channels, patterns } = get();
+    if (channels.length >= 16) return;
+
+    const FL_PALETTE = [
+      '#ff851b', '#3b82f6', '#00ffcc', '#a855f7', 
+      '#2ecc40', '#ff4136', '#ffdc00', '#f012be', 
+      '#39cccc', '#01ff70', '#e67e22', '#9b59b6', 
+      '#3498db', '#1abc9c', '#e74c3c', '#f39c12'
+    ];
+
+    const usedTrackIndices = new Set(channels.map(c => c.trackIdx));
+    let nextTrackIdx = 1;
+    for (let i = 1; i <= 16; i++) {
+      if (!usedTrackIndices.has(i)) {
+        nextTrackIdx = i;
+        break;
+      }
+    }
+
+    const newId = `ch_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+    const instrumentType = options.instrumentType || (options.presetId ? 'soundfont' : 'synth');
+    const synthSound = options.synthSound || 'synth';
+    const defaultName = options.name || (options.presetId 
+      ? options.presetId.replace(/_/g, ' ') 
+      : `Channel ${channels.length + 1}`);
+
+    const newChannel: Channel = {
+      id: newId,
+      name: defaultName,
+      vol: 0.8,
+      pan: 0,
+      muted: false,
+      solo: false,
+      trackIdx: nextTrackIdx,
+      color: FL_PALETTE[(nextTrackIdx - 1) % FL_PALETTE.length],
+      customBuffer: null,
+      instrumentType,
+      soundfontPreset: options.presetId,
+      synthSound,
+      velocities: Array(16).fill(0.8),
+      pattern: Array(16).fill(0),
+      notes: []
+    };
+
+    useMixerStore.getState().setTrackName(nextTrackIdx, `${defaultName} Insert`);
+
+    const updatedPatterns = patterns.map(p => ({
+      ...p,
+      channels: {
+        ...p.channels,
+        [newId]: {
+          pattern: Array(16).fill(0),
+          velocities: Array(16).fill(0.8),
+          notes: []
+        }
+      }
+    }));
+
+    set({
+      channels: [...channels, newChannel],
+      patterns: updatedPatterns
+    });
+  },
+
+  removeChannel: (channelId: string) => {
+    const { channels, activeChannelId, patterns } = get();
+    if (channels.length <= 1) return;
+
+    const updatedChannels = channels.filter(c => c.id !== channelId);
+    let nextActiveId = activeChannelId;
+    if (activeChannelId === channelId) {
+      nextActiveId = updatedChannels[0]?.id || '';
+    }
+
+    const updatedPatterns = patterns.map(p => {
+      const rest = { ...p.channels };
+      delete rest[channelId];
+      return { ...p, channels: rest };
+    });
+
+    set({
+      channels: updatedChannels,
+      activeChannelId: nextActiveId,
+      patterns: updatedPatterns
+    });
+  },
+
+  renameChannel: (channelId: string, name: string) => {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    const { channels } = get();
+    const ch = channels.find(c => c.id === channelId);
+    if (ch) {
+      useMixerStore.getState().setTrackName(ch.trackIdx, `${trimmed} Insert`);
+    }
+    set({
+      channels: channels.map(c => c.id === channelId ? { ...c, name: trimmed } : c)
+    });
   },
 
   addNote: (channelId, note) => set((state) => ({

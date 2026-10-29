@@ -5,13 +5,12 @@ import { Layers, Sparkles, Info, Pencil, Check } from 'lucide-react';
 
 export const PlaylistArranger: React.FC = () => {
   const {
-    playlistClips, togglePlaylistClip, patterns, activePatternId,
+    playlistClips, togglePlaylistClip, patterns, activePatternId, channels,
     isPlaying, playMode, currentBar, setPlayMode, loadDemoSong, renamePattern
   } = useProjectStore();
 
   const { t } = useLanguageStore();
   const currentPattern = patterns.find(p => p.id === activePatternId);
-  const trackNames = [t.trackDrums, t.trackSnare, t.trackHats, t.trackMelody];
 
   const [isEditingName, setIsEditingName] = useState(false);
   const [nameInput, setNameInput] = useState('');
@@ -32,6 +31,15 @@ export const PlaylistArranger: React.FC = () => {
     }
     setIsEditingName(false);
   };
+
+  // Mapeia faixas de timeline diretamente com os canais existentes
+  const tracks = channels.map((ch, idx) => ({
+    trackIdx: idx,
+    channelId: ch.id,
+    name: ch.name,
+    color: ch.color,
+    mixerTrackIdx: ch.trackIdx,
+  }));
 
   return (
     <div className="bg-fl-panel border border-fl-border rounded-xl shadow-2xl overflow-hidden flex flex-col select-none">
@@ -122,25 +130,28 @@ export const PlaylistArranger: React.FC = () => {
 
       {/* Playlist Tracks Grid */}
       <div className="p-3 space-y-2 bg-fl-bg divide-y divide-fl-border/20">
-        {trackNames.map((trackName, trackIdx) => (
-          <div key={trackIdx} className="pt-2 first:pt-0 flex items-stretch h-12 gap-2">
+        {tracks.map((track) => (
+          <div key={track.channelId} className="pt-2 first:pt-0 flex items-stretch h-12 gap-2">
             {/* Track Header Title */}
             <div className="w-44 shrink-0 bg-fl-surface px-2.5 py-1 rounded border border-fl-border flex items-center justify-between text-xs font-semibold text-gray-300">
-              <span className="truncate">{trackName}</span>
-              <span className="text-[10px] font-mono text-gray-400">Trk {trackIdx + 1}</span>
+              <div className="flex items-center gap-1.5 truncate">
+                <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: track.color }} />
+                <span className="truncate">{track.name}</span>
+              </div>
+              <span className="text-[10px] font-mono text-gray-400">Trk {track.mixerTrackIdx}</span>
             </div>
 
             {/* 16 Bar Grid Cells */}
             <div className="flex-1 grid grid-cols-16 gap-1 relative">
               {Array.from({ length: 16 }).map((_, barIdx) => {
-                const clip = playlistClips.find(c => c.trackIdx === trackIdx && c.bar === barIdx);
+                const clip = playlistClips.find(c => c.trackIdx === track.trackIdx && c.bar === barIdx);
                 const isCurrentBar = isPlaying && playMode === 'SONG' && currentBar === barIdx;
                 const pattern = clip ? patterns.find(p => p.id === clip.patternId) : null;
 
                 return (
                   <div
                     key={barIdx}
-                    onClick={() => togglePlaylistClip(trackIdx, barIdx)}
+                    onClick={() => togglePlaylistClip(track.trackIdx, barIdx)}
                     className={`rounded border transition-all cursor-pointer relative flex items-center justify-center overflow-hidden ${
                       clip
                         ? 'border-white/30 shadow-md font-bold text-[10px] text-white hover:brightness-110'

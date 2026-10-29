@@ -1,21 +1,11 @@
 {
   "name": "MusicX Studio",
   "image": "mcr.microsoft.com/devcontainers/javascript-node:20",
-  "customizations": {
-    "vscode": {
-      "extensions": [
-        "ritwickdey.LiveServer"
-      ]
-    }
-  },
-  "forwardPorts": [3000, 5500],
+  "postCreateCommand": "npm install",
+  "forwardPorts": [3000],
   "portsAttributes": {
     "3000": {
-      "label": "MusicX Web (port 3000)",
-      "onAutoForward": "openBrowser"
-    },
-    "5500": {
-      "label": "Live Server (port 5500)",
+      "label": "MusicX Studio (Vite React)",
       "onAutoForward": "openBrowser"
     }
   }

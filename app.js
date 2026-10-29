@@ -43,21 +43,25 @@ let audioCtx = null;
 const channels = [
   { 
     id: 'kick', name: 'Kick 808', vol: 0.9, pan: 0, muted: false, trackIdx: 1, notes: [],
+    customBuffer: null,
     velocities: [0.95, 0.70, 0.70, 0.70, 0.95, 0.70, 0.70, 0.70, 0.95, 0.70, 0.70, 0.70, 0.95, 0.70, 0.70, 0.70],
     pattern: [1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0] 
   },
   { 
     id: 'snare', name: 'Snare Hard', vol: 0.75, pan: 0, muted: false, trackIdx: 2, notes: [],
+    customBuffer: null,
     velocities: [0.70, 0.70, 0.70, 0.70, 0.90, 0.70, 0.70, 0.70, 0.70, 0.70, 0.70, 0.70, 0.90, 0.70, 0.70, 0.70],
     pattern: [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0] 
   },
   { 
     id: 'hat', name: 'Hat Closed', vol: 0.6, pan: 0.1, muted: false, trackIdx: 3, notes: [],
+    customBuffer: null,
     velocities: [0.90, 0.45, 0.75, 0.45, 0.90, 0.45, 0.75, 0.45, 0.90, 0.45, 0.75, 0.45, 0.90, 0.45, 0.75, 0.45],
     pattern: [1,0,1,0, 1,0,1,0, 1,0,1,0, 1,0,1,0] 
   },
   { 
     id: 'clap', name: 'Clap 90s', vol: 0.7, pan: -0.1, muted: false, trackIdx: 4, notes: [],
+    customBuffer: null,
     velocities: [0.70, 0.70, 0.70, 0.70, 0.85, 0.70, 0.70, 0.70, 0.70, 0.70, 0.70, 0.70, 0.85, 0.70, 0.70, 0.70],
     pattern: [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0] 
   },
@@ -68,6 +72,7 @@ const channels = [
     pan: 0, 
     muted: false, 
     trackIdx: 5, 
+    customBuffer: null,
     notes: [
       { step: 0, midi: 24 }, // C2
       { step: 3, midi: 27 }, // D#2
@@ -79,6 +84,95 @@ const channels = [
     velocities: [0.95, 0.75, 0.75, 0.85, 0.75, 0.75, 0.90, 0.75, 0.75, 0.85, 0.75, 0.75, 0.95, 0.75, 0.85, 0.75],
     pattern: [1,0,0,1, 0,0,1,0, 0,1,0,0, 1,0,1,0] 
   }
+];
+
+// Helper to deep clone channel pattern & notes
+function cloneChannelData(ch) {
+  return {
+    id: ch.id,
+    pattern: [...ch.pattern],
+    notes: ch.notes.map(n => ({ ...n })),
+    velocities: [...ch.velocities]
+  };
+}
+
+// ==========================================
+// MULTIPLE PATTERNS SYSTEM
+// ==========================================
+let currentPatternId = 1;
+let patternCounter = 1;
+
+const patterns = [
+  {
+    id: 1,
+    name: 'Pattern 1',
+    colorClass: 'pattern-1',
+    data: channels.map(cloneChannelData)
+  }
+];
+
+function saveCurrentPatternData() {
+  const currentPat = patterns.find(p => p.id === currentPatternId);
+  if (currentPat) {
+    currentPat.data = channels.map(cloneChannelData);
+  }
+}
+
+function switchToPattern(id) {
+  saveCurrentPatternData();
+  const targetPat = patterns.find(p => p.id === id);
+  if (!targetPat) return;
+
+  currentPatternId = id;
+  targetPat.data.forEach(savedCh => {
+    const ch = channels.find(c => c.id === savedCh.id);
+    if (ch) {
+      ch.pattern = [...savedCh.pattern];
+      ch.notes = savedCh.notes.map(n => ({ ...n }));
+      ch.velocities = [...savedCh.velocities];
+    }
+  });
+
+  // Update UI Elements
+  document.getElementById('patDisplayName').textContent = targetPat.name;
+  document.getElementById('playlistCurrentBrushPat').textContent = targetPat.name;
+  const rackTitle = document.querySelector('.rack-title');
+  if (rackTitle) rackTitle.textContent = `🎹 Channel Rack • ${targetPat.name}`;
+
+  renderRack();
+  renderPianoRoll();
+}
+
+function createNewPattern() {
+  patternCounter++;
+  const newId = patternCounter;
+  const newPat = {
+    id: newId,
+    name: `Pattern ${newId}`,
+    colorClass: `pattern-${((newId - 1) % 4) + 1}`,
+    data: channels.map(ch => ({
+      id: ch.id,
+      pattern: [0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0],
+      notes: [],
+      velocities: [0.85, 0.85, 0.85, 0.85, 0.85, 0.85, 0.85, 0.85, 0.85, 0.85, 0.85, 0.85, 0.85, 0.85, 0.85, 0.85]
+    }))
+  };
+  patterns.push(newPat);
+  switchToPattern(newId);
+}
+
+// ==========================================
+// PLAYLIST ARRANGER DATA & SONG MODE
+// ==========================================
+let playMode = 'PAT'; // 'PAT' ou 'SONG'
+let currentSongStep = 0; // 0 a 255 (16 compassos * 16 steps)
+
+// Initial default arrangement in Playlist
+let playlistClips = [
+  { track: 0, bar: 0, patternId: 1 },
+  { track: 0, bar: 1, patternId: 1 },
+  { track: 0, bar: 2, patternId: 1 },
+  { track: 0, bar: 3, patternId: 1 }
 ];
 
 // Mixer Tracks Configuration (0 = Master, 1-5 = Channels)
@@ -296,8 +390,23 @@ function getChannelDestination(channelId) {
 }
 
 // ==========================================
-// INSTRUMENT SYNTHESIS ENGINES (WITH PITCH)
+// INSTRUMENT SYNTHESIS ENGINES (WITH PITCH & CUSTOM SAMPLES)
 // ==========================================
+function playCustomSample(ch, time, vol, pan, freq) {
+  if (!ch.customBuffer) return;
+  const source = audioCtx.createBufferSource();
+  source.buffer = ch.customBuffer;
+  if (freq) {
+    source.playbackRate.setValueAtTime(freq / 65.41, time);
+  }
+  const gain = audioCtx.createGain();
+  gain.gain.setValueAtTime(vol, time);
+  const dest = getChannelDestination(ch.id);
+  source.connect(gain);
+  gain.connect(dest);
+  source.start(time);
+}
+
 function playKick(time, vol, pan, freq) {
   const osc = audioCtx.createOscillator();
   const gain = audioCtx.createGain();
@@ -408,7 +517,6 @@ function playBass(time, vol, pan, freq) {
   osc.type = 'sawtooth';
   osc.frequency.setValueAtTime(baseFreq, time);
 
-  // Dynamic resonant acid filter sweep
   filter.type = 'lowpass';
   filter.frequency.setValueAtTime(baseFreq * 8, time);
   filter.frequency.exponentialRampToValueAtTime(baseFreq * 1.5, time + 0.22);
@@ -427,6 +535,11 @@ function playBass(time, vol, pan, freq) {
 }
 
 function triggerSample(channelId, time, vol, pan, freq) {
+  const ch = channels.find(c => c.id === channelId);
+  if (ch && ch.customBuffer) {
+    playCustomSample(ch, time, vol, pan, freq);
+    return;
+  }
   if (channelId === 'kick') playKick(time, vol, pan, freq);
   else if (channelId === 'snare') playSnare(time, vol, pan);
   else if (channelId === 'hat') playHat(time, vol, pan);
@@ -435,7 +548,7 @@ function triggerSample(channelId, time, vol, pan, freq) {
 }
 
 // ==========================================
-// SEQUENCER CLOCK (Lookahead Scheduler)
+// SEQUENCER CLOCK (Lookahead Scheduler with SONG / PAT Mode)
 // ==========================================
 let isPlaying = false;
 let currentStep = 0;
@@ -444,41 +557,74 @@ let nextNoteTime = 0.0;
 const lookahead = 25.0;
 const scheduleAheadTime = 0.1;
 let timerID = null;
+let swing = 0; // 0 to 100%
 
 function nextNote() {
   const secondsPerBeat = 60.0 / bpm;
   const secondsPerStep = secondsPerBeat / 4;
   nextNoteTime += secondsPerStep;
-  currentStep = (currentStep + 1) % 16;
-}
 
-let swing = 0; // 0 to 100%
+  if (playMode === 'PAT') {
+    currentStep = (currentStep + 1) % 16;
+  } else {
+    currentSongStep = (currentSongStep + 1) % (16 * 16); // 16 compassos de 16 passos = 256 passos
+    currentStep = currentSongStep % 16;
+  }
+}
 
 function scheduleStep(stepNumber, time) {
   const secondsPerBeat = 60.0 / bpm;
   const secondsPerStep = secondsPerBeat / 4;
 
-  // FL Studio Swing: delays off-beat 16th steps (1, 3, 5, 7, 9, 11, 13, 15)
   const isOddStep = (stepNumber % 2 === 1);
   const swingDelay = isOddStep ? (swing / 100) * (secondsPerStep * 0.5) : 0;
   const noteTime = time + swingDelay;
 
-  channels.forEach(ch => {
-    if (!ch.muted) {
-      const stepVel = (ch.velocities && ch.velocities[stepNumber] !== undefined) ? ch.velocities[stepNumber] : 0.85;
-      const hitVol = ch.vol * stepVel;
+  if (playMode === 'PAT') {
+    channels.forEach(ch => {
+      if (!ch.muted) {
+        const stepVel = (ch.velocities && ch.velocities[stepNumber] !== undefined) ? ch.velocities[stepNumber] : 0.85;
+        const hitVol = ch.vol * stepVel;
 
-      if (ch.notes && ch.notes.length > 0) {
-        const stepNotes = ch.notes.filter(n => n.step === stepNumber);
-        stepNotes.forEach(n => {
-          const freq = midiToFreq(n.midi);
-          triggerSample(ch.id, noteTime, hitVol, ch.pan, freq);
-        });
-      } else if (ch.pattern[stepNumber]) {
-        triggerSample(ch.id, noteTime, hitVol, ch.pan);
+        if (ch.notes && ch.notes.length > 0) {
+          const stepNotes = ch.notes.filter(n => n.step === stepNumber);
+          stepNotes.forEach(n => {
+            const freq = midiToFreq(n.midi);
+            triggerSample(ch.id, noteTime, hitVol, ch.pan, freq);
+          });
+        } else if (ch.pattern[stepNumber]) {
+          triggerSample(ch.id, noteTime, hitVol, ch.pan);
+        }
       }
-    }
-  });
+    });
+  } else {
+    // SONG Mode: tocar os patterns posicionados na barra atual da Playlist
+    const currentBar = Math.floor(currentSongStep / 16);
+    const activeClips = playlistClips.filter(c => c.bar === currentBar);
+
+    activeClips.forEach(clip => {
+      const pat = patterns.find(p => p.id === clip.patternId);
+      if (!pat) return;
+
+      pat.data.forEach(patCh => {
+        const mainCh = channels.find(c => c.id === patCh.id);
+        if (mainCh && !mainCh.muted) {
+          const stepVel = (patCh.velocities && patCh.velocities[stepNumber] !== undefined) ? patCh.velocities[stepNumber] : 0.85;
+          const hitVol = mainCh.vol * stepVel;
+
+          if (patCh.notes && patCh.notes.length > 0) {
+            const stepNotes = patCh.notes.filter(n => n.step === stepNumber);
+            stepNotes.forEach(n => {
+              const freq = midiToFreq(n.midi);
+              triggerSample(mainCh.id, noteTime, hitVol, mainCh.pan, freq);
+            });
+          } else if (patCh.pattern[stepNumber]) {
+            triggerSample(mainCh.id, noteTime, hitVol, mainCh.pan);
+          }
+        }
+      });
+    });
+  }
 
   const delay = Math.max(0, (noteTime - audioCtx.currentTime) * 1000);
   setTimeout(() => {
@@ -501,6 +647,9 @@ function play() {
   if (isPlaying) return;
   isPlaying = true;
   currentStep = 0;
+  if (playMode === 'SONG') {
+    currentSongStep = 0;
+  }
   nextNoteTime = audioCtx.currentTime + 0.05;
   document.getElementById('btnPlay').classList.add('active');
   scheduler();
@@ -510,12 +659,14 @@ function stop() {
   isPlaying = false;
   clearTimeout(timerID);
   currentStep = 0;
+  currentSongStep = 0;
   document.getElementById('btnPlay').classList.remove('active');
   updateVisualCursor(-1);
+  updatePlaylistPlayhead(-1);
 }
 
 // ==========================================
-// RENDER UI: CHANNEL RACK
+// RENDER UI: CHANNEL RACK (COM DRAG & DROP)
 // ==========================================
 function renderRack() {
   const container = document.getElementById('channelsContainer');
@@ -524,6 +675,24 @@ function renderRack() {
   channels.forEach((ch, chIdx) => {
     const row = document.createElement('div');
     row.className = 'channel-row';
+    row.dataset.channelId = ch.id;
+
+    // Drag and Drop de Samples de Áudio
+    row.ondragover = (e) => {
+      e.preventDefault();
+      row.classList.add('drag-over');
+    };
+    row.ondragleave = () => {
+      row.classList.remove('drag-over');
+    };
+    row.ondrop = (e) => {
+      e.preventDefault();
+      row.classList.remove('drag-over');
+      if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        const file = e.dataTransfer.files[0];
+        loadCustomSampleFromFile(ch, file);
+      }
+    };
 
     const meta = document.createElement('div');
     meta.className = 'chan-meta';
@@ -543,7 +712,7 @@ function renderRack() {
     const nameBtn = document.createElement('div');
     nameBtn.className = 'chan-name-btn';
     nameBtn.textContent = ch.name;
-    nameBtn.title = 'Clique para testar o som';
+    nameBtn.title = ch.customBuffer ? `Sample carregado: ${ch.name} (Clique para testar)` : 'Clique para testar ou arraste um WAV aqui';
     nameBtn.onclick = () => {
       initAudio();
       const previewFreq = ch.notes && ch.notes.length > 0 ? midiToFreq(ch.notes[0].midi) : undefined;
@@ -610,7 +779,6 @@ function renderRack() {
 
         if (ch.pattern[s]) {
           pad.style.opacity = 0.4 + (stepVel * 0.6);
-          // If turning on and no note in piano roll, create root note C2 (midi 24)
           if (ch.notes && !ch.notes.some(n => n.step === s)) {
             ch.notes.push({ step: s, midi: 24 });
             pad.classList.add('has-piano-notes');
@@ -620,12 +788,13 @@ function renderRack() {
           triggerSample(ch.id, audioCtx.currentTime, ch.vol * stepVel, ch.pan, freq);
         } else {
           pad.style.opacity = '1';
-          // If turning off, remove any notes at this step
           if (ch.notes) {
             ch.notes = ch.notes.filter(n => n.step !== s);
             pad.classList.remove('has-piano-notes');
           }
         }
+
+        saveCurrentPatternData();
 
         if (isGraphEditorOpen) {
           const velSlots = container.querySelectorAll(`.velocity-bar-slot[data-channel="${chIdx}"]`);
@@ -685,6 +854,8 @@ function renderRack() {
             stepPads[s].style.opacity = 0.4 + (ch.velocities[s] * 0.6);
           }
 
+          saveCurrentPatternData();
+
           initAudio();
           const previewFreq = ch.notes && ch.notes.length > 0 ? midiToFreq(ch.notes[0].midi) : undefined;
           triggerSample(ch.id, audioCtx.currentTime, ch.vol * ch.velocities[s], ch.pan, previewFreq);
@@ -711,8 +882,24 @@ function renderRack() {
   });
 }
 
+function loadCustomSampleFromFile(channel, file) {
+  initAudio();
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    const arrayBuffer = ev.target.result;
+    audioCtx.decodeAudioData(arrayBuffer, (decodedBuffer) => {
+      channel.customBuffer = decodedBuffer;
+      channel.name = file.name.replace(/\.[^/.]+$/, '').slice(0, 11);
+      renderRack();
+      triggerSample(channel.id, audioCtx.currentTime, channel.vol, channel.pan);
+    }, (err) => {
+      alert('Não foi possível decodificar o arquivo de áudio. Use arquivos .WAV ou .MP3 padrão.');
+    });
+  };
+  reader.readAsArrayBuffer(file);
+}
+
 function updateVisualCursor(step) {
-  // Update step pads in Channel Rack
   const pads = document.querySelectorAll('.step-pad');
   pads.forEach(p => {
     if (parseInt(p.dataset.step, 10) === step) {
@@ -722,7 +909,6 @@ function updateVisualCursor(step) {
     }
   });
 
-  // Update LCD display
   const stepCounter = document.getElementById('stepCounterDisplay');
   if (step >= 0) {
     stepCounter.textContent = (step + 1).toString().padStart(2, '0');
@@ -730,8 +916,10 @@ function updateVisualCursor(step) {
     stepCounter.textContent = '--';
   }
 
-  // Update Piano Roll Playhead
   updatePianoRollPlayhead(step);
+  if (playMode === 'SONG') {
+    updatePlaylistPlayhead(currentSongStep);
+  }
 }
 
 // ==========================================
@@ -759,7 +947,6 @@ function renderPianoRoll() {
   const kbContainer = document.getElementById('prKeyboard');
   const gridContainer = document.getElementById('prGridContainer');
   
-  // Retain playhead
   let playhead = document.getElementById('prPlayhead');
   if (!playhead) {
     playhead = document.createElement('div');
@@ -772,7 +959,6 @@ function renderPianoRoll() {
   gridContainer.appendChild(playhead);
 
   PR_NOTE_MAP.forEach(noteItem => {
-    // 1. Render Left Piano Key
     const key = document.createElement('div');
     key.className = `pr-key ${noteItem.isBlack ? 'black-key' : 'white-key'}`;
     key.textContent = noteItem.name;
@@ -786,7 +972,6 @@ function renderPianoRoll() {
     key.onmouseleave = () => key.classList.remove('active');
     kbContainer.appendChild(key);
 
-    // 2. Render Grid Row
     const row = document.createElement('div');
     row.className = `pr-row ${noteItem.isBlack ? 'black-row' : 'white-row'}`;
     row.dataset.midi = noteItem.midi;
@@ -798,7 +983,6 @@ function renderPianoRoll() {
       cell.dataset.step = s;
       cell.dataset.midi = noteItem.midi;
 
-      // Check if there is an active note here
       const hasNote = currentCh.notes && currentCh.notes.some(n => n.step === s && n.midi === noteItem.midi);
       if (hasNote) {
         const chip = document.createElement('div');
@@ -824,19 +1008,15 @@ function toggleNote(channel, step, midi) {
   const existingNoteIdx = channel.notes.findIndex(n => n.step === step && n.midi === midi);
 
   if (existingNoteIdx !== -1) {
-    // Remove note
     channel.notes.splice(existingNoteIdx, 1);
   } else {
-    // Monophonic on same step: remove previous note at this step
     channel.notes = channel.notes.filter(n => n.step !== step);
-    // Add new note
     channel.notes.push({ step, midi });
-    // Preview sound
     triggerSample(channel.id, audioCtx.currentTime, channel.vol, channel.pan, midiToFreq(midi));
   }
 
-  // Sync Channel Rack pattern
   channel.pattern[step] = channel.notes.some(n => n.step === step) ? 1 : 0;
+  saveCurrentPatternData();
 
   renderPianoRoll();
   renderRack();
@@ -856,7 +1036,6 @@ function updatePianoRollPlayhead(step) {
   }
 }
 
-// Setup Piano Roll Tools
 function setupPianoRollControls() {
   renderPianoRollRuler();
 
@@ -866,13 +1045,13 @@ function setupPianoRollControls() {
     renderPianoRoll();
   };
 
-  // Octave Down
   document.getElementById('prOctaveDownBtn').onclick = () => {
     const ch = channels.find(c => c.id === currentPrChannelId);
     if (!ch || !ch.notes) return;
     ch.notes.forEach(n => {
       if (n.midi - 12 >= 24) n.midi -= 12;
     });
+    saveCurrentPatternData();
     renderPianoRoll();
     initAudio();
     if (ch.notes.length > 0) {
@@ -880,13 +1059,13 @@ function setupPianoRollControls() {
     }
   };
 
-  // Octave Up
   document.getElementById('prOctaveUpBtn').onclick = () => {
     const ch = channels.find(c => c.id === currentPrChannelId);
     if (!ch || !ch.notes) return;
     ch.notes.forEach(n => {
       if (n.midi + 12 <= 48) n.midi += 12;
     });
+    saveCurrentPatternData();
     renderPianoRoll();
     initAudio();
     if (ch.notes.length > 0) {
@@ -894,7 +1073,6 @@ function setupPianoRollControls() {
     }
   };
 
-  // Acid Preset
   document.getElementById('prPresetAcidBtn').onclick = () => {
     const ch = channels.find(c => c.id === currentPrChannelId);
     if (!ch) return;
@@ -907,28 +1085,120 @@ function setupPianoRollControls() {
       { step: 14, midi: 31 }  // G2
     ];
     ch.pattern = [1,0,0,1, 0,0,1,0, 0,1,0,0, 1,0,1,0];
+    saveCurrentPatternData();
     renderPianoRoll();
     renderRack();
     initAudio();
     triggerSample(ch.id, audioCtx.currentTime, ch.vol, ch.pan, midiToFreq(24));
   };
 
-  // Clear All Notes
   document.getElementById('prClearBtn').onclick = () => {
     const ch = channels.find(c => c.id === currentPrChannelId);
     if (!ch) return;
     ch.notes = [];
     ch.pattern = [0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0];
+    saveCurrentPatternData();
     renderPianoRoll();
     renderRack();
   };
 
-  // Close Piano Roll
   document.getElementById('prCloseBtn').onclick = () => {
     const prWin = document.getElementById('pianoRollWindow');
     prWin.style.display = 'none';
     document.getElementById('togglePrBtn').classList.remove('active');
   };
+}
+
+// ==========================================
+// PLAYLIST ARRANGER ENGINE & INTERFACE
+// ==========================================
+function renderPlaylistRuler() {
+  const container = document.getElementById('playlistRulerBars');
+  container.innerHTML = '';
+  for (let b = 0; b < 16; b++) {
+    const barDiv = document.createElement('div');
+    barDiv.className = 'playlist-ruler-bar';
+    barDiv.textContent = `Bar ${b + 1}`;
+    container.appendChild(barDiv);
+  }
+}
+
+function renderPlaylist() {
+  renderPlaylistRuler();
+  const container = document.getElementById('playlistTracksContainer');
+  container.innerHTML = '';
+
+  const NUM_TRACKS = 4;
+  const NUM_BARS = 16;
+
+  for (let t = 0; t < NUM_TRACKS; t++) {
+    const row = document.createElement('div');
+    row.className = 'playlist-track-row';
+
+    const header = document.createElement('div');
+    header.className = 'playlist-track-header';
+    header.textContent = `Track ${t + 1}`;
+    row.appendChild(header);
+
+    const grid = document.createElement('div');
+    grid.className = 'playlist-bars-grid';
+
+    for (let b = 0; b < NUM_BARS; b++) {
+      const cell = document.createElement('div');
+      cell.className = 'playlist-bar-cell';
+      cell.dataset.track = t;
+      cell.dataset.bar = b;
+
+      // Procurar se existe um clipe neste compasso e faixa
+      const clip = playlistClips.find(c => c.track === t && c.bar === b);
+      if (clip) {
+        const pat = patterns.find(p => p.id === clip.patternId);
+        const block = document.createElement('div');
+        block.className = `playlist-clip-block ${pat ? pat.colorClass : 'pattern-1'}`;
+        block.innerHTML = `
+          <span>${pat ? pat.name : `Pat ${clip.patternId}`}</span>
+          <span class="playlist-clip-remove" title="Remover bloco">&times;</span>
+        `;
+        block.querySelector('.playlist-clip-remove').onclick = (e) => {
+          e.stopPropagation();
+          playlistClips = playlistClips.filter(c => !(c.track === t && c.bar === b));
+          renderPlaylist();
+        };
+        cell.appendChild(block);
+      }
+
+      cell.onclick = () => {
+        const existing = playlistClips.find(c => c.track === t && c.bar === b);
+        if (existing) {
+          playlistClips = playlistClips.filter(c => !(c.track === t && c.bar === b));
+        } else {
+          playlistClips.push({ track: t, bar: b, patternId: currentPatternId });
+        }
+        renderPlaylist();
+      };
+
+      grid.appendChild(cell);
+    }
+    row.appendChild(grid);
+    container.appendChild(row);
+  }
+}
+
+function updatePlaylistPlayhead(songStep) {
+  const playhead = document.getElementById('playlistPlayhead');
+  const playlistBody = document.getElementById('playlistBody');
+  if (!playhead || !playlistBody) return;
+
+  if (songStep >= 0 && isPlaying && playMode === 'SONG') {
+    playhead.style.display = 'block';
+    const totalSteps = 16 * 16;
+    // O grid começa depois dos 90px do cabeçalho da Track
+    const gridWidth = playlistBody.clientWidth - 90;
+    const leftOffset = 90 + (songStep / totalSteps) * gridWidth;
+    playhead.style.left = `${leftOffset}px`;
+  } else {
+    playhead.style.display = 'none';
+  }
 }
 
 // ==========================================
@@ -968,7 +1238,6 @@ function renderMixerStrips() {
       <div class="strip-mute-btn ${tr.muted ? 'muted' : ''}" id="mute-${tr.id}" title="Mute/Unmute"></div>
     `;
 
-    // Pan handling
     const panSlider = strip.querySelector('.strip-pan-slider');
     panSlider.oninput = (e) => {
       tr.pan = parseFloat(e.target.value);
@@ -979,7 +1248,6 @@ function renderMixerStrips() {
       }
     };
 
-    // Fader handling
     const faderSlider = strip.querySelector('.fader-slider');
     const dbReadout = strip.querySelector(`#db-${tr.id}`);
     faderSlider.oninput = (e) => {
@@ -993,7 +1261,6 @@ function renderMixerStrips() {
       }
     };
 
-    // Mute handling
     const muteBtn = strip.querySelector(`#mute-${tr.id}`);
     muteBtn.onclick = () => {
       tr.muted = !tr.muted;
@@ -1054,14 +1321,14 @@ function startVuMeterLoop() {
 
         if (segRatio <= node.currentPeak) {
           if (i > 21) {
-            ctx.fillStyle = '#ff3344'; // Clip Red
+            ctx.fillStyle = '#ff3344';
           } else if (i > 16) {
-            ctx.fillStyle = '#ffaa00'; // Warning Amber
+            ctx.fillStyle = '#ffaa00';
           } else {
-            ctx.fillStyle = '#39d353'; // Signal Green
+            ctx.fillStyle = '#39d353';
           }
         } else {
-          ctx.fillStyle = '#181b20'; // Off segment
+          ctx.fillStyle = '#181b20';
         }
         ctx.fillRect(1, y, w - 2, segH);
       }
@@ -1183,11 +1450,353 @@ function setupFxControls() {
 }
 
 // ==========================================
-// TOP CONTROLS & BPM TWO-WAY SYNC
+// WAV EXPORTER (OFFLINE AUDIO CONTEXT)
+// ==========================================
+function encodeWAV(audioBuffer) {
+  const numChannels = audioBuffer.numberOfChannels;
+  const sampleRate = audioBuffer.sampleRate;
+  const format = 1; // PCM
+  const bitDepth = 16;
+
+  const samplesL = audioBuffer.getChannelData(0);
+  const samplesR = numChannels > 1 ? audioBuffer.getChannelData(1) : samplesL;
+  const numSamples = samplesL.length;
+
+  const buffer = new ArrayBuffer(44 + numSamples * 2 * 2);
+  const view = new DataView(buffer);
+
+  function writeString(offset, string) {
+    for (let i = 0; i < string.length; i++) {
+      view.setUint8(offset + i, string.charCodeAt(i));
+    }
+  }
+
+  // RIFF Chunk
+  writeString(0, 'RIFF');
+  view.setUint32(4, 36 + numSamples * 4, true);
+  writeString(8, 'WAVE');
+
+  // fmt Subchunk
+  writeString(12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, format, true);
+  view.setUint16(22, numChannels, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * numChannels * 2, true);
+  view.setUint16(32, numChannels * 2, true);
+  view.setUint16(34, bitDepth, true);
+
+  // data Subchunk
+  writeString(36, 'data');
+  view.setUint32(40, numSamples * 4, true);
+
+  // Interleave L / R samples
+  let offset = 44;
+  for (let i = 0; i < numSamples; i++) {
+    let sL = Math.max(-1, Math.min(1, samplesL[i]));
+    let sR = Math.max(-1, Math.min(1, samplesR[i]));
+    view.setInt16(offset, sL < 0 ? sL * 0x8000 : sL * 0x7FFF, true);
+    view.setInt16(offset + 2, sR < 0 ? sR * 0x8000 : sR * 0x7FFF, true);
+    offset += 4;
+  }
+
+  return new Blob([buffer], { type: 'audio/wav' });
+}
+
+async function exportAudioToWAV() {
+  initAudio();
+  const btn = document.getElementById('exportWavBtn');
+  const originalText = btn.textContent;
+  btn.textContent = '⏳ Renderizando...';
+  btn.disabled = true;
+
+  try {
+    const sampleRate = 44100;
+    const secondsPerBeat = 60.0 / bpm;
+    const secondsPerStep = secondsPerBeat / 4;
+
+    // Determinar tempo total de renderização
+    let totalStepsToRender = 16;
+    if (playMode === 'SONG') {
+      const maxBar = playlistClips.reduce((max, c) => Math.max(max, c.bar), 0);
+      totalStepsToRender = (maxBar + 1) * 16;
+    }
+    const renderDuration = (totalStepsToRender * secondsPerStep) + 2.0; // +2s tail para reverb/delay
+
+    const offlineCtx = new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(2, Math.ceil(sampleRate * renderDuration), sampleRate);
+
+    // Schedule offline
+    for (let step = 0; step < totalStepsToRender; step++) {
+      const isOdd = (step % 2 === 1);
+      const swingDelay = isOdd ? (swing / 100) * (secondsPerStep * 0.5) : 0;
+      const noteTime = (step * secondsPerStep) + swingDelay;
+
+      if (playMode === 'PAT') {
+        channels.forEach(ch => {
+          if (!ch.muted) {
+            const stepVel = (ch.velocities && ch.velocities[step] !== undefined) ? ch.velocities[step] : 0.85;
+            const hitVol = ch.vol * stepVel;
+
+            if (ch.notes && ch.notes.length > 0) {
+              const stepNotes = ch.notes.filter(n => n.step === step);
+              stepNotes.forEach(n => {
+                renderOfflineNote(offlineCtx, ch.id, noteTime, hitVol, midiToFreq(n.midi));
+              });
+            } else if (ch.pattern[step]) {
+              renderOfflineNote(offlineCtx, ch.id, noteTime, hitVol);
+            }
+          }
+        });
+      } else {
+        const bar = Math.floor(step / 16);
+        const subStep = step % 16;
+        const activeClips = playlistClips.filter(c => c.bar === bar);
+
+        activeClips.forEach(clip => {
+          const pat = patterns.find(p => p.id === clip.patternId);
+          if (!pat) return;
+
+          pat.data.forEach(patCh => {
+            const mainCh = channels.find(c => c.id === patCh.id);
+            if (mainCh && !mainCh.muted) {
+              const stepVel = (patCh.velocities && patCh.velocities[subStep] !== undefined) ? patCh.velocities[subStep] : 0.85;
+              const hitVol = mainCh.vol * stepVel;
+
+              if (patCh.notes && patCh.notes.length > 0) {
+                const stepNotes = patCh.notes.filter(n => n.step === subStep);
+                stepNotes.forEach(n => {
+                  renderOfflineNote(offlineCtx, mainCh.id, noteTime, hitVol, midiToFreq(n.midi));
+                });
+              } else if (patCh.pattern[subStep]) {
+                renderOfflineNote(offlineCtx, mainCh.id, noteTime, hitVol);
+              }
+            }
+          });
+        });
+      }
+    }
+
+    const renderedBuffer = await offlineCtx.startRendering();
+    const wavBlob = encodeWAV(renderedBuffer);
+
+    // Disparar download
+    const url = URL.createObjectURL(wavBlob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `musicx-studio-${playMode.toLowerCase()}-${Date.now()}.wav`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    console.error('Erro na exportação:', err);
+    alert('Erro ao exportar arquivo WAV.');
+  } finally {
+    btn.textContent = originalText;
+    btn.disabled = false;
+  }
+}
+
+// Render synth note offline
+function renderOfflineNote(ctx, channelId, time, vol, freq) {
+  const ch = channels.find(c => c.id === channelId);
+  if (ch && ch.customBuffer) {
+    const src = ctx.createBufferSource();
+    src.buffer = ch.customBuffer;
+    if (freq) src.playbackRate.setValueAtTime(freq / 65.41, time);
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(vol, time);
+    src.connect(gain);
+    gain.connect(ctx.destination);
+    src.start(time);
+    return;
+  }
+
+  if (channelId === 'kick') {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const p = freq ? freq * 2.2 : 150;
+    osc.frequency.setValueAtTime(p, time);
+    osc.frequency.exponentialRampToValueAtTime(0.01, time + 0.4);
+    gain.gain.setValueAtTime(vol, time);
+    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.4);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(time);
+    osc.stop(time + 0.45);
+  } else if (channelId === 'snare') {
+    const bSize = ctx.sampleRate * 0.2;
+    const buf = ctx.createBuffer(1, bSize, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < bSize; i++) d[i] = Math.random() * 2 - 1;
+    const noise = ctx.createBufferSource();
+    noise.buffer = buf;
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'highpass';
+    filter.frequency.setValueAtTime(1000, time);
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(vol * 0.8, time);
+    gain.gain.exponentialRampToValueAtTime(0.01, time + 0.18);
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+    noise.start(time);
+    noise.stop(time + 0.2);
+  } else if (channelId === 'hat') {
+    const bSize = ctx.sampleRate * 0.05;
+    const buf = ctx.createBuffer(1, bSize, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < bSize; i++) d[i] = Math.random() * 2 - 1;
+    const noise = ctx.createBufferSource();
+    noise.buffer = buf;
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'highpass';
+    filter.frequency.setValueAtTime(7000, time);
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(vol * 0.5, time);
+    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.05);
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+    noise.start(time);
+    noise.stop(time + 0.06);
+  } else if (channelId === 'clap') {
+    const bSize = ctx.sampleRate * 0.25;
+    const buf = ctx.createBuffer(1, bSize, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < bSize; i++) d[i] = Math.random() * 2 - 1;
+    const noise = ctx.createBufferSource();
+    noise.buffer = buf;
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(1200, time);
+    filter.Q.setValueAtTime(2, time);
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(vol * 0.7, time);
+    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.22);
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+    noise.start(time);
+    noise.stop(time + 0.25);
+  } else if (channelId === 'bass') {
+    const f = freq || 65.41;
+    const osc = ctx.createOscillator();
+    const filter = ctx.createBiquadFilter();
+    const gain = ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(f, time);
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(f * 8, time);
+    filter.frequency.exponentialRampToValueAtTime(f * 1.5, time + 0.22);
+    filter.Q.setValueAtTime(4.0, time);
+    gain.gain.setValueAtTime(vol * 0.75, time);
+    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.28);
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(time);
+    osc.stop(time + 0.3);
+  }
+}
+
+// ==========================================
+// TOP CONTROLS, BPM TWO-WAY SYNC & VIEW TOGGLES
 // ==========================================
 document.getElementById('btnPlay').onclick = play;
 document.getElementById('btnStop').onclick = stop;
 
+// Mode PAT / SONG Toggle
+const modePatBtn = document.getElementById('modePatBtn');
+const modeSongBtn = document.getElementById('modeSongBtn');
+
+modePatBtn.onclick = () => {
+  playMode = 'PAT';
+  modePatBtn.classList.add('active');
+  modeSongBtn.classList.remove('active');
+  if (isPlaying) {
+    stop();
+    play();
+  }
+};
+
+modeSongBtn.onclick = () => {
+  playMode = 'SONG';
+  modeSongBtn.classList.add('active');
+  modePatBtn.classList.remove('active');
+  if (isPlaying) {
+    stop();
+    play();
+  }
+};
+
+// Pattern Selector Navigation
+document.getElementById('prevPatBtn').onclick = () => {
+  const idx = patterns.findIndex(p => p.id === currentPatternId);
+  if (idx > 0) {
+    switchToPattern(patterns[idx - 1].id);
+  }
+};
+
+document.getElementById('nextPatBtn').onclick = () => {
+  const idx = patterns.findIndex(p => p.id === currentPatternId);
+  if (idx < patterns.length - 1) {
+    switchToPattern(patterns[idx + 1].id);
+  }
+};
+
+document.getElementById('addPatBtn').onclick = () => {
+  createNewPattern();
+};
+
+document.getElementById('exportWavBtn').onclick = exportAudioToWAV;
+
+// Playlist Tools
+document.getElementById('btnClearPlaylistBtn').onclick = () => {
+  playlistClips = [];
+  renderPlaylist();
+};
+
+document.getElementById('btnDemoSongBtn').onclick = () => {
+  // Cria Pattern 2 se ainda não existir
+  if (!patterns.find(p => p.id === 2)) {
+    patternCounter++;
+    patterns.push({
+      id: 2,
+      name: 'Pattern 2',
+      colorClass: 'pattern-2',
+      data: channels.map(ch => ({
+        id: ch.id,
+        pattern: ch.id === 'hat' ? [1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1] : [...ch.pattern],
+        notes: ch.id === 'bass' ? [{step: 0, midi: 24}, {step: 2, midi: 27}, {step: 4, midi: 29}, {step: 6, midi: 31}, {step: 8, midi: 34}, {step: 10, midi: 36}] : [...ch.notes],
+        velocities: [...ch.velocities]
+      }))
+    });
+  }
+
+  // Preenche arranjo demo
+  playlistClips = [
+    // Track 1: Beat Principal
+    { track: 0, bar: 0, patternId: 1 },
+    { track: 0, bar: 1, patternId: 1 },
+    { track: 0, bar: 2, patternId: 1 },
+    { track: 0, bar: 3, patternId: 1 },
+    // Track 2: Variação / Drop
+    { track: 1, bar: 4, patternId: 2 },
+    { track: 1, bar: 5, patternId: 2 },
+    { track: 1, bar: 6, patternId: 2 },
+    { track: 1, bar: 7, patternId: 2 },
+    // Track 3: Final Beat
+    { track: 2, bar: 8, patternId: 1 },
+    { track: 2, bar: 9, patternId: 1 }
+  ];
+
+  renderPlaylist();
+  // Alterna para modo SONG
+  modeSongBtn.click();
+};
+
+// BPM Control
 const bpmSlider = document.getElementById('bpmSlider');
 const bpmInput = document.getElementById('bpmInput');
 
@@ -1226,13 +1835,15 @@ bpmInput.onkeydown = (e) => {
   }
 };
 
-// Panel Toggle Buttons (Channel Rack / Piano Roll / Mixer)
+// Panel Toggle Buttons (Channel Rack / Piano Roll / Playlist / Mixer)
 const rackWin = document.getElementById('channelRackWindow');
 const prWin = document.getElementById('pianoRollWindow');
+const playlistWin = document.getElementById('playlistWindow');
 const mixerWin = document.getElementById('mixerWindow');
 
 const toggleRackBtn = document.getElementById('toggleRackBtn');
 const togglePrBtn = document.getElementById('togglePrBtn');
+const togglePlaylistBtn = document.getElementById('togglePlaylistBtn');
 const toggleMixerBtn = document.getElementById('toggleMixerBtn');
 
 toggleRackBtn.onclick = () => {
@@ -1247,6 +1858,15 @@ togglePrBtn.onclick = () => {
   togglePrBtn.classList.toggle('active', isHidden);
   if (isHidden) {
     renderPianoRoll();
+  }
+};
+
+togglePlaylistBtn.onclick = () => {
+  const isHidden = playlistWin.style.display === 'none';
+  playlistWin.style.display = isHidden ? 'flex' : 'none';
+  togglePlaylistBtn.classList.toggle('active', isHidden);
+  if (isHidden) {
+    renderPlaylist();
   }
 };
 
@@ -1276,9 +1896,12 @@ toggleGraphEditorBtn.onclick = () => {
   renderRack();
 };
 
-// Initial Render
+// ==========================================
+// INITIAL APPLICATION RENDER
+// ==========================================
 renderRack();
 renderMixerStrips();
 setupFxControls();
 setupPianoRollControls();
 renderPianoRoll();
+renderPlaylist();

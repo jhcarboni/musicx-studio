@@ -86,7 +86,7 @@ graph LR
   - **Master DJ Filter**: Filtro passa-baixa e passa-alta dinâmico com varredura de Cutoff e Ressonância ($Q$).
 - [x] **Roteamento de Canais**: Cada som do Channel Rack ligado à sua respectiva pista no Mixer.
 
-### 🚀 Fase 3: Piano Roll Melódico e Carregador de Samples (Em Andamento)
+### ✅ Fase 3: Piano Roll Melódico e Expressividade (Concluída)
 - [x] **Piano Roll Interativo**: Grade melódica de 2 oitavas (C2 a C4, 24 semitons) para compor melodias e linhas de baixo.
 - [x] **Teclado de Piano Vertical**: Teclas brancas e pretas clicáveis com pré-escuta instantânea de afinação.
 - [x] **Sincronização Bidirecional**: Notas desenhadas no Piano Roll acionam os pads do Channel Rack com indicador visual `🎹`.
@@ -94,11 +94,15 @@ graph LR
 - [x] **Playhead Luminoso Sincronizado**: Linha vertical ciano que percorre os compassos em tempo real durante a reprodução.
 - [x] **Controle de Swing / Groove Global**: Fader de shuffle (0% a 100%) no Channel Rack que atrasa os passos pares para conferir balanço rítmico (House, Trap, Garage).
 - [x] **Graph Editor de Velocity por Passo**: Gaveta de ajuste vertical de volume para cada passo (10% a 100%) com suporte a desenho contínuo por arrasto do mouse e sombreamento nos pads.
-- [ ] Drag-and-drop de arquivos `.wav` do computador para os pads.
+- [x] **Drag-and-Drop de Samples de Áudio**: Arraste arquivos `.wav`/`.mp3` direto do computador para qualquer canal para usar seus próprios sons.
 
-### ⏳ Fase 4: Playlist / Arranjador e Exportação
-- [ ] Timeline horizontal multi-pistas com múltiplos Patterns.
-- [ ] Exportação do áudio final em `.wav` de alta qualidade via `OfflineAudioContext`.
+### ✅ Fase 4: Playlist / Arranjador e Exportação (Concluída)
+- [x] **Múltiplos Patterns**: Crie e alterne entre `Pattern 1`, `Pattern 2`, `Pattern 3` com seletor `<` `>` e botão `+`.
+- [x] **Modo PAT vs SONG**: Alternância clássica entre tocar apenas o loop do padrão ativo ou a timeline completa da música.
+- [x] **Playlist Multi-Pistas (Arranger)**: Grade horizontal de 16 compassos em 4 pistas com posicionamento e remoção de blocos de padrões.
+- [x] **Playhead da Playlist**: Indicador luminoso sincronizado que percorre os compassos durante a execução em modo SONG.
+- [x] **Preset Demo Song**: Botão que monta um arranjo completo demonstrativo na timeline com Intro, Drop e Outro.
+- [x] **Exportação WAV em Alta Definição**: Renderização ultrarrápida via `OfflineAudioContext` para download de arquivo `.wav` estéreo 16-bit 44.1kHz.
 
 ---
 

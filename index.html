@@ -14,6 +14,13 @@
     <div class="app-logo">
       <span>🎛️</span> MUSICX STUDIO
     </div>
+
+    <!-- PAT / SONG MODE TOGGLE -->
+    <div class="mode-toggle" title="Alternar entre tocar o Pattern atual ou a Música completa (Playlist)">
+      <button id="modePatBtn" class="mode-btn active">PAT</button>
+      <button id="modeSongBtn" class="mode-btn">SONG</button>
+    </div>
+
     <button id="btnPlay" class="transport-btn play">▶ PLAY</button>
     <button id="btnStop" class="transport-btn">■ STOP</button>
     
@@ -21,18 +28,30 @@
       <span class="lcd-label">BPM</span>
       <input type="number" id="bpmInput" class="lcd-input" min="40" max="240" value="130">
     </div>
-    <input type="range" id="bpmSlider" min="40" max="240" value="130" style="width: 90px;">
+    <input type="range" id="bpmSlider" min="40" max="240" value="130" style="width: 85px;">
 
     <div class="lcd-display">
       <span class="lcd-label">STEP</span>
       <span id="stepCounterDisplay">--</span>
     </div>
+
+    <!-- PATTERN SELECTOR -->
+    <div class="pattern-selector-wrap" title="Seletor de Padrões">
+      <button id="prevPatBtn" class="pat-nav-btn" title="Padrão Anterior">&lt;</button>
+      <span id="patDisplayName" class="pat-display-name">Pattern 1</span>
+      <button id="nextPatBtn" class="pat-nav-btn" title="Próximo Padrão">&gt;</button>
+      <button id="addPatBtn" class="pat-add-btn" title="Criar Novo Padrão">+</button>
+    </div>
   </div>
 
   <div class="toolbar-right">
+    <button id="exportWavBtn" class="export-btn" title="Exportar áudio renderizado em arquivo WAV estéreo">
+      ⬇️ Export WAV
+    </button>
     <div class="view-toggles">
       <button id="toggleRackBtn" class="view-btn active">🎹 Rack</button>
       <button id="togglePrBtn" class="view-btn active">🎹 Piano Roll</button>
+      <button id="togglePlaylistBtn" class="view-btn active">🎵 Playlist</button>
       <button id="toggleMixerBtn" class="view-btn active">🎛️ Mixer & FX</button>
     </div>
   </div>
@@ -100,6 +119,32 @@
   <div class="pr-footer">
     <span id="prNoteInfo">Clique em uma célula para adicionar ou remover notas. Clique nas teclas de piano à esquerda para pré-escutar o tom.</span>
     <span class="pr-scale-info">Range: C2 a C4 (24 Semitons) &bull; 16 Steps</span>
+  </div>
+</div>
+
+<!-- PLAYLIST ARRANGER WINDOW -->
+<div id="playlistWindow" class="playlist-panel">
+  <div class="playlist-header">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <span class="playlist-title">🎵 FL Playlist &bull; Song Arranger</span>
+      <span style="color: #666; font-size: 11px;">16 Compassos (Bars) &bull; 4 Pistas Multi-Track</span>
+    </div>
+    <div class="playlist-tools">
+      <span style="font-size: 10px; color: #888;">Pintar na Timeline:</span>
+      <span id="playlistCurrentBrushPat" style="font-size: 10px; font-weight: bold; color: #ff8533;">Pattern 1</span>
+      <button id="btnClearPlaylistBtn" class="pr-tool-btn danger" style="padding: 2px 6px; font-size: 10px;" title="Limpar blocos da Playlist">Limpar Timeline</button>
+      <button id="btnDemoSongBtn" class="pr-tool-btn" style="padding: 2px 6px; font-size: 10px;" title="Carregar arranjo demo da música">⚡ Demo Song</button>
+    </div>
+  </div>
+
+  <div class="playlist-timeline-ruler">
+    <div class="playlist-ruler-corner">TRACK</div>
+    <div class="playlist-ruler-bars" id="playlistRulerBars"></div>
+  </div>
+
+  <div class="playlist-body" id="playlistBody">
+    <div id="playlistPlayhead" class="playlist-playhead"></div>
+    <div id="playlistTracksContainer"></div>
   </div>
 </div>
 

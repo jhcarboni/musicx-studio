@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Play, Square, Sliders, Music, Download, 
-  Grid, Plus, Layers, Sparkles 
+  Grid, Plus, Layers, Sparkles, Loader2 
 } from 'lucide-react';
 import { useProjectStore } from '../../store/useProjectStore';
 import { audioEngine } from '../../audio/AudioEngine';
@@ -15,6 +15,8 @@ export const TopToolbar: React.FC = () => {
     setActiveWindow, createNewPattern, loadDemoSong
   } = useProjectStore();
 
+  const [isExporting, setIsExporting] = useState(false);
+
   const handleTogglePlay = () => {
     if (isPlaying) {
       audioEngine.stop();
@@ -24,16 +26,20 @@ export const TopToolbar: React.FC = () => {
   };
 
   const handleExportWAV = async () => {
+    if (isExporting) return;
     try {
+      setIsExporting(true);
       const blob = await exportSongToWAV(16);
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `musicx_studio_export_${Date.now()}.wav`;
+      a.download = `musicx_studio_master_${Date.now()}.wav`;
       a.click();
       URL.revokeObjectURL(url);
     } catch (err) {
       console.error('Erro na exportação:', err);
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -69,7 +75,7 @@ export const TopToolbar: React.FC = () => {
           <button
             onClick={() => audioEngine.stop()}
             className="p-1.5 rounded bg-fl-panel hover:bg-fl-border text-gray-300 hover:text-fl-red transition-all"
-            title="Stop"
+            title="Stop (Enter)"
           >
             <Square className="w-3.5 h-3.5 fill-current" />
           </button>
@@ -168,7 +174,10 @@ export const TopToolbar: React.FC = () => {
         </div>
 
         <button
-          onClick={loadDemoSong}
+          onClick={() => {
+            loadDemoSong();
+            setPlayMode('SONG');
+          }}
           className="flex items-center gap-1.5 px-2.5 py-1.5 bg-fl-surface hover:bg-fl-border border border-fl-border rounded-md text-xs font-semibold text-fl-green transition-all"
           title="Carregar Demo Song Completo"
         >
@@ -177,9 +186,23 @@ export const TopToolbar: React.FC = () => {
 
         <button
           onClick={handleExportWAV}
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-fl-surface hover:bg-fl-border border border-fl-border rounded-md text-xs font-semibold text-fl-accent transition-all hover:shadow-fl-glow"
+          disabled={isExporting}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+            isExporting
+              ? 'bg-fl-surface border border-fl-accent text-fl-accent animate-pulse cursor-wait'
+              : 'bg-fl-surface hover:bg-fl-border border border-fl-border text-fl-accent hover:shadow-fl-glow'
+          }`}
+          title="Exportar Música Offline (.WAV 16-bit PCM)"
         >
-          <Download className="w-3.5 h-3.5" /> Export WAV
+          {isExporting ? (
+            <>
+              <Loader2 className="w-3.5 h-3.5 animate-spin" /> Renderizando...
+            </>
+          ) : (
+            <>
+              <Download className="w-3.5 h-3.5" /> Export WAV
+            </>
+          )}
         </button>
       </div>
     </header>

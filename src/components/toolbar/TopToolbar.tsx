@@ -96,22 +96,6 @@ export const TopToolbar: React.FC = () => {
   return (
     <header className="h-14 bg-fl-panel border-b border-fl-border px-2 sm:px-3 lg:px-4 flex items-center justify-between shadow-md shrink-0 select-none gap-2">
       <div className="flex items-center gap-1.5 sm:gap-2.5 lg:gap-3.5 shrink-0">
-        {/* Logo & Brand */}
-        <div className="flex items-center gap-1.5 shrink-0">
-          <span className="text-lg sm:text-xl">🎛️</span>
-          <div className="flex items-center gap-1">
-            <span className="text-xs sm:text-sm font-black tracking-wider text-white font-mono">
-              MUSIC<span className="text-fl-accent">X</span>
-              <span className="hidden md:inline text-gray-300"> STUDIO</span>
-            </span>
-            <span className="hidden xl:inline text-[9px] px-1 py-0.2 bg-fl-accent/20 text-fl-accent rounded border border-fl-accent/30 font-mono font-bold">
-              v2.0 PRO
-            </span>
-          </div>
-        </div>
-
-        <div className="h-5 w-px bg-fl-border/60 shrink-0 hidden sm:block" />
-
         {/* Transport Controls */}
         <div className="flex items-center gap-1 bg-fl-surface px-1.5 py-1 rounded-md border border-fl-border shrink-0">
           <button

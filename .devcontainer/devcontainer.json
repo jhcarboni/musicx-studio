@@ -6,7 +6,8 @@
   "portsAttributes": {
     "3000": {
       "label": "MusicX Studio (Vite React)",
-      "onAutoForward": "openBrowser"
+      "onAutoForward": "openBrowser",
+      "visibility": "public"
     }
   }
 }
